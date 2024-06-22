@@ -1,0 +1,5 @@
+- id: terraform-format
+  name: Terraform Format
+  entry: hooks/terraform/format
+  language: golang
+  files: \.tf$
