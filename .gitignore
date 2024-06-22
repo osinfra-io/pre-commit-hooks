@@ -4,6 +4,8 @@
 # Datadog Static Analysis
 static-analysis.datadog.yml
 
+# Infracost
+.infracost
 
 # Other Files
 *.log
