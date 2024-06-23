@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,7 +18,7 @@ func TestTerraformFormat(t *testing.T) {
 
 	// Step 2: Create Terraform files
 	formattedContent := `variable "example" {}`
-	unformattedContent := `variable   "example"   {}` // Unformatted spaces
+	unformattedContent := `variable   "example"   {}` // Extra spaces
 
 	formattedFilePath, err := filepath.Abs(filepath.Join(tempDir, "formatted.tf"))
 	if err != nil {
@@ -30,24 +29,43 @@ func TestTerraformFormat(t *testing.T) {
 		t.Fatalf("Failed to get absolute path: %v", err)
 	}
 
-	os.WriteFile(formattedFilePath, []byte(formattedContent), 0644)
-	os.WriteFile(unformattedFilePath, []byte(unformattedContent), 0644)
-
-	// Change working directory to tempDir
-	originalWd, _ := os.Getwd()
-
-	if err := os.Chdir(tempDir); err != nil {
-		log.Fatalf("Failed to change directory to %s: %v", tempDir, err)
+	if err := os.WriteFile(formattedFilePath, []byte(formattedContent), 0644); err != nil {
+		t.Fatalf("Failed to write formatted file: %v", err)
 	}
+	if err := os.WriteFile(unformattedFilePath, []byte(unformattedContent), 0644); err != nil {
+		t.Fatalf("Failed to write unformatted file: %v", err)
+	}
+
+	// Ensure tempDir is an absolute path
+	absTempDir, err := filepath.Abs(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to get absolute path for %s: %v", tempDir, err)
+	}
+
+	// Get the current working directory as an absolute path
+	originalWd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("Failed to get current working directory: %v", err)
+	}
+
+	// Change working directory to absTempDir
+	if err := os.Chdir(absTempDir); err != nil {
+		t.Fatalf("Failed to change directory to %s: %v", absTempDir, err)
+	}
+
+	// Defer the restoration of the original working directory
 	defer func() {
 		if err := os.Chdir(originalWd); err != nil {
-			log.Fatalf("Failed to restore original working directory to %s: %v", originalWd, err)
+			t.Fatalf("Failed to restore original working directory to %s: %v", originalWd, err)
 		}
 	}()
 
 	// Step 3: Capture output
 	originalStdout := os.Stdout // Keep backup of the real stdout
-	r, w, _ := os.Pipe()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("Failed to create pipe: %v", err)
+	}
 	os.Stdout = w
 
 	main()
@@ -57,7 +75,7 @@ func TestTerraformFormat(t *testing.T) {
 
 	var buf bytes.Buffer
 	if _, err := buf.ReadFrom(r); err != nil {
-		log.Fatalf("Failed to read from reader: %v", err)
+		t.Fatalf("Failed to read from reader: %v", err)
 	}
 	output := buf.String()
 
@@ -67,7 +85,10 @@ func TestTerraformFormat(t *testing.T) {
 	}
 
 	// Verify unformatted file is now formatted
-	unformattedResult, _ := os.ReadFile(unformattedFilePath)
+	unformattedResult, err := os.ReadFile(unformattedFilePath)
+	if err != nil {
+		t.Fatalf("Failed to read file %s: %v", unformattedFilePath, err)
+	}
 	if string(unformattedResult) != formattedContent {
 		t.Errorf("File was not formatted correctly")
 	}

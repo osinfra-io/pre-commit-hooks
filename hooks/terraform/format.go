@@ -9,7 +9,18 @@ import (
 	outputs "github.com/osinfra-io/pre-commit-hooks/hooks/helpers"
 )
 
+func checkTerraformInstalled() bool {
+	_, err := exec.LookPath("terraform")
+	return err == nil
+}
+
 func main() {
+	if !checkTerraformInstalled() {
+		fmt.Println("Terraform is not installed or not in PATH.")
+		// Handle the error, e.g., exit the program or inform the user.
+		os.Exit(1)
+	}
+
 	fmt.Println(outputs.EmojiColorText(outputs.Running, "Running terraform fmt...", outputs.Purple))
 
 	// Find unformatted Terraform files
