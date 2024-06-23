@@ -38,7 +38,6 @@ func TestTerraformFormat(t *testing.T) {
 	if err := os.Chdir(tempDir); err != nil {
 		log.Fatalf("Failed to change directory to %s: %v", tempDir, err)
 	}
-
 	defer func() {
 		if err := os.Chdir(originalWd); err != nil {
 			log.Fatalf("Failed to restore original working directory to %s: %v", originalWd, err)
