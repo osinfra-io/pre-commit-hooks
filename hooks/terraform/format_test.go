@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -23,13 +24,26 @@ func TestTerraformFormat(t *testing.T) {
 	formattedFilePath := filepath.Join(tempDir, "formatted.tf")
 	unformattedFilePath := filepath.Join(tempDir, "unformatted.tf")
 
-	os.WriteFile(formattedFilePath, []byte(formattedContent), 0644)
-	os.WriteFile(unformattedFilePath, []byte(unformattedContent), 0644)
+	if err := os.WriteFile(formattedFilePath, []byte(formattedContent), 0644); err != nil {
+		log.Fatalf("Failed to write formatted content to file: %v", err)
+	}
+
+	if err := os.WriteFile(unformattedFilePath, []byte(unformattedContent), 0644); err != nil {
+		log.Fatalf("Failed to write unformatted content to file: %v", err)
+	}
 
 	// Change working directory to tempDir
 	originalWd, _ := os.Getwd()
-	os.Chdir(tempDir)
-	defer os.Chdir(originalWd) // Restore working directory
+
+	if err := os.Chdir(tempDir); err != nil {
+		log.Fatalf("Failed to change directory to %s: %v", tempDir, err)
+	}
+
+	defer func() {
+		if err := os.Chdir(originalWd); err != nil {
+			log.Fatalf("Failed to restore original working directory to %s: %v", originalWd, err)
+		}
+	}()
 
 	// Step 3: Capture output
 	originalStdout := os.Stdout // Keep backup of the real stdout
@@ -42,7 +56,9 @@ func TestTerraformFormat(t *testing.T) {
 	os.Stdout = originalStdout // Restore original stdout
 
 	var buf bytes.Buffer
-	buf.ReadFrom(r)
+	if _, err := buf.ReadFrom(r); err != nil {
+		log.Fatalf("Failed to read from reader: %v", err)
+	}
 	output := buf.String()
 
 	// Step 4: Verify results
