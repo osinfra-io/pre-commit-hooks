@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	outputs "github.com/osinfra-io/pre-commit-hooks/hooks/helpers"
 	"os"
 	"os/exec"
 	"strings"
+
+	outputs "github.com/osinfra-io/pre-commit-hooks/hooks/helpers"
 )
 
 func main() {
-	fmt.Println(outputs.EmojiColorText(outputs.Running, "Running terraform fmt...", outputs.Cyan))
+	fmt.Println(outputs.EmojiColorText(outputs.Running, "Running terraform fmt...", outputs.Purple))
 
 	// Find unformatted Terraform files
 	cmd := exec.Command("terraform", "fmt", "-check", "-recursive")
@@ -32,7 +33,7 @@ func main() {
 			fmt.Println("  " + outputs.EmojiColorText(outputs.Diamond, (file), outputs.Yellow))
 		}
 
-		fmt.Println(outputs.EmojiColorText(outputs.Working, "Formatting files with terraform fmt...", outputs.Cyan))
+		fmt.Println(outputs.EmojiColorText(outputs.Working, "Formatting files with terraform fmt...", outputs.Purple))
 		cmd := exec.Command("terraform", "fmt", "-recursive")
 		err := cmd.Run()
 

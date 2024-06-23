@@ -23,10 +23,10 @@ func Colorize(text, color string) string {
 
 // Emoji constants
 const (
-    Error      = "❌"
+    Error      = "💀"
     Warning    = "🚧"
     Working    = "🔨"
-    Running    = "🏃"
+    Running    = "🔩"
     ThumbsUp   = "👍"
     ThumbsDown = "👎"
     Diamond    = "🔸"
