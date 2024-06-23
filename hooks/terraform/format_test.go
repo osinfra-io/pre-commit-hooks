@@ -21,16 +21,17 @@ func TestTerraformFormat(t *testing.T) {
 	formattedContent := `variable "example" {}`
 	unformattedContent := `variable   "example"   {}` // Unformatted spaces
 
-	formattedFilePath := filepath.Join(tempDir, "formatted.tf")
-	unformattedFilePath := filepath.Join(tempDir, "unformatted.tf")
-
-	if err := os.WriteFile(formattedFilePath, []byte(formattedContent), 0644); err != nil {
-		log.Fatalf("Failed to write formatted content to file: %v", err)
+	formattedFilePath, err := filepath.Abs(filepath.Join(tempDir, "formatted.tf"))
+	if err != nil {
+		t.Fatalf("Failed to get absolute path: %v", err)
+	}
+	unformattedFilePath, err := filepath.Abs(filepath.Join(tempDir, "unformatted.tf"))
+	if err != nil {
+		t.Fatalf("Failed to get absolute path: %v", err)
 	}
 
-	if err := os.WriteFile(unformattedFilePath, []byte(unformattedContent), 0644); err != nil {
-		log.Fatalf("Failed to write unformatted content to file: %v", err)
-	}
+	os.WriteFile(formattedFilePath, []byte(formattedContent), 0644)
+	os.WriteFile(unformattedFilePath, []byte(unformattedContent), 0644)
 
 	// Change working directory to tempDir
 	originalWd, _ := os.Getwd()
