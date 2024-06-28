@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	outputs "github.com/osinfra-io/pre-commit-hooks/pkg/common/helpers"
+	"github.com/osinfra-io/pre-commit-hooks/internal/outputs"
 )
 
 func checkTerraformInstalled() bool {
@@ -17,7 +17,6 @@ func checkTerraformInstalled() bool {
 func main() {
 	if !checkTerraformInstalled() {
 		fmt.Println("Terraform is not installed or not in PATH.")
-		// Handle the error, e.g., exit the program or inform the user.
 		os.Exit(1)
 	}
 
@@ -41,7 +40,7 @@ func main() {
 		// Split the unformattedFiles string into a slice of file names
 		fileNames := strings.Split(unformattedFiles, "\n")
 		for _, file := range fileNames {
-			fmt.Println("  " + outputs.EmojiColorText(outputs.Diamond, (file), outputs.Yellow))
+			fmt.Println(outputs.Yellow, "  - " + file)
 		}
 
 		fmt.Println(outputs.EmojiColorText(outputs.Working, "Formatting files with terraform fmt...", outputs.Purple))

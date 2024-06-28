@@ -1,5 +1,16 @@
 - id: terraform-fmt
-  name: Terraform Format
+  description: The terraform fmt command is used to rewrite Terraform configuration files to a canonical format and style.
   entry: terraform-fmt
+  exclude: \.terraform/.*$
+  files: (\.tf|\.tfvars)$
   language: golang
-  files: \.tf$
+  name: Terraform Format
+  require_serial: true
+
+- id: terraform-validate
+  description: The terraform validate command validates the configuration files in a directory, referring only to the configuration and not accessing any remote services such as remote state, provider APIs, etc.
+  entry: terraform-validate
+  exclude: \.terraform/.*$
+  files: (\.tf|\.tfvars)$
+  language: golang
+  name: Terraform Validate
