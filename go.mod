@@ -1,3 +1,3 @@
-module github.com/osinfra-io/pre-commit-hooks
+module pre-commit-hooks
 
-go 1.22.4
+go 1.24.2
