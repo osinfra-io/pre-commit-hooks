@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/osinfra-io/pre-commit-hooks/internal/outputs"
+	"pre-commit-hooks/internal/outputs"
 )
 
 func checkTerraformInstalled() bool {
