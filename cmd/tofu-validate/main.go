@@ -43,12 +43,12 @@ func main() {
 	// Append extra args (e.g., "-upgrade") if provided
 	initArgs = append(initArgs, extraArgs...)
 	initCmd := exec.Command("tofu", initArgs...)
-	_, err = initCmd.CombinedOutput()
+	output, err := initCmd.CombinedOutput()
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu init failed: %v\n", outputs.Red), err)
+			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu init failed: %v\n%s", outputs.Red), err, output)
 		} else {
-			fmt.Printf(outputs.EmojiColorText(outputs.Error, "Error running tofu init: %v\n", outputs.Red), err)
+			fmt.Printf(outputs.EmojiColorText(outputs.Error, "Error running tofu init: %v\n%s", outputs.Red), err, output)
 		}
 		os.Exit(1)
 	}
@@ -58,12 +58,12 @@ func main() {
 	validateArgs := []string{"validate"}
 	validateArgs = append(validateArgs, extraArgs...)
 	cmd := exec.Command("tofu", validateArgs...)
-	_, err = cmd.CombinedOutput()
+	output, err = cmd.CombinedOutput()
 	if err != nil {
 		if _, ok := err.(*exec.ExitError); ok {
-			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu validate failed: %v\n", outputs.Red), err)
+			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu validate failed: %v\n%s", outputs.Red), err, output)
 		} else {
-			fmt.Printf(outputs.EmojiColorText(outputs.Error, "Error running tofu validate: %v\n", outputs.Red), err)
+			fmt.Printf(outputs.EmojiColorText(outputs.Error, "Error running tofu validate: %v\n%s", outputs.Red), err, output)
 		}
 		os.Exit(1)
 	}
