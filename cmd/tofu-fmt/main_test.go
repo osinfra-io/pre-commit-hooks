@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-func TestTerraformFormat(t *testing.T) {
+func TestOpenTofuFormat(t *testing.T) {
 	// Step 1: Create temporary directory
 	tempDir, err := os.MkdirTemp("", ".go_test")
 	if err != nil {
@@ -16,7 +16,7 @@ func TestTerraformFormat(t *testing.T) {
 	}
 	defer os.RemoveAll(tempDir) // Cleanup
 
-	// Step 2: Create Terraform files
+	// Step 2: Create OpenTofu files
 	formattedContent := `variable "example" {}`
 	unformattedContent := `variable   "example"   {}` // Extra spaces
 
@@ -80,7 +80,7 @@ func TestTerraformFormat(t *testing.T) {
 	output := buf.String()
 
 	// Step 4: Verify results
-	if !strings.Contains(output, "Files formatted successfully with terraform fmt.") {
+	if !strings.Contains(output, "Files formatted successfully with tofu fmt.") {
 		t.Errorf("Expected success message not found in output")
 	}
 

@@ -1,16 +1,18 @@
-- id: terraform-fmt
-  description: The terraform fmt command is used to rewrite Terraform configuration files to a canonical format and style.
-  entry: terraform-fmt
-  exclude: \.terraform/.*$
-  files: (\.tf|\.tfvars)$
+- id: tofu-fmt
+  description: The tofu fmt command is used to rewrite OpenTofu configuration files to a canonical format and style.
+  entry: tofu-fmt
+  exclude: \.tofu/.*$
+  files: (\.tofu|\.tfvars)$
   language: golang
-  name: Terraform Format
+  name: OpenTofu Format
   require_serial: true
 
-- id: terraform-validate
-  description: The terraform validate command validates the configuration files in a directory, referring only to the configuration and not accessing any remote services such as remote state, provider APIs, etc.
-  entry: terraform-validate
-  exclude: \.terraform/.*$
-  files: (\.tf|\.tfvars)$
+- id: tofu-validate
+  description: The tofu validate command validates the configuration files in a directory, referring only to the configuration and not accessing any remote services such as remote state, provider APIs, etc.
+  entry: tofu-validate
+  exclude: \.tofu/.*$
+  files: ^$
+  pass_filenames: false
+  always_run: true
   language: golang
-  name: Terraform Validate
+  name: OpenTofu Validate
