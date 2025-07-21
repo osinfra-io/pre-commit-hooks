@@ -24,7 +24,8 @@ func main() {
 		fmt.Println("Error getting current directory:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Running tofu fmt in directory: %s\n", wd)
+	dirName := wd[strings.LastIndex(wd, string(os.PathSeparator))+1:]
+	fmt.Printf("Running tofu fmt recursively in directory: %s\n", dirName)
 
 	extraArgs := os.Args[1:]
 
@@ -35,11 +36,11 @@ func main() {
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 3 && unformattedFiles != "" {
-			printStatus(outputs.Warning, "Found unformatted OpenTofu files:")
+			fmt.Println(outputs.EmojiColorText(outputs.Warning, "Found unformatted OpenTofu files:", outputs.Yellow))
 			for _, file := range strings.Split(unformattedFiles, "\n") {
-				fmt.Println(outputs.Warning, "  - "+file)
+				fmt.Println(outputs.EmojiColorText(outputs.Warning, "  - "+file, outputs.Yellow))
 			}
-			printStatus(outputs.Working, "Formatting files with tofu fmt...")
+			printStatus(outputs.Running, "Formatting files with tofu fmt...")
 			_, fmtErr := runTofuCmd([]string{"fmt", "-recursive"}, extraArgs)
 			if fmtErr != nil {
 				printStatus(outputs.Error, "Error running tofu fmt:")

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"pre-commit-hooks/internal/outputs"
 )
@@ -20,28 +19,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		cwd = "(unknown directory)"
-	}
-	dirName := filepath.Base(cwd)
-	extraArgs := os.Args[1:]
+       cwd, err := os.Getwd()
+       if err != nil {
+	       cwd = "(unknown directory)"
+       }
+       extraArgs := os.Args[1:]
 
-	printStatus(outputs.Running, fmt.Sprintf("Running tofu init in %s...", dirName))
-	output, err := runTofuCmd([]string{"init", "-input=false"}, extraArgs)
-	if err != nil {
-		printError("OpenTofu init failed", err, output)
-		os.Exit(1)
-	}
+       printStatus(outputs.Running, fmt.Sprintf("Running tofu init in %s...", cwd))
+       output, err := runTofuCmd([]string{"init", "-input=false"}, extraArgs)
+       if err != nil {
+	       printError(fmt.Sprintf("OpenTofu init failed in %s", cwd), err, output)
+	       os.Exit(1)
+       }
 
-	printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in %s...", dirName))
-	output, err = runTofuCmd([]string{"validate"}, extraArgs)
-	if err != nil {
-		printError("OpenTofu validate failed", err, output)
-		os.Exit(1)
-	}
+       printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in %s...", cwd))
+       output, err = runTofuCmd([]string{"validate"}, extraArgs)
+       if err != nil {
+	       printError(fmt.Sprintf("OpenTofu validate failed in %s", cwd), err, output)
+	       os.Exit(1)
+       }
 
-	printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully.")
+       printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully.")
 }
 
 // runTofuCmd runs a tofu command with base and extra args, returns output and error

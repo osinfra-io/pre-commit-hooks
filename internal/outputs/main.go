@@ -21,8 +21,7 @@ func Colorize(text, color string) string {
 const (
 	Error      = "💀"
 	Warning    = "🚧"
-	Working    = "🔨"
-	Running    = "🔩"
+	Running    = "⚙️"
 	ThumbsUp   = "👍"
 	ThumbsDown = "👎"
 	Diamond    = "🔸"

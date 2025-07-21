@@ -1,8 +1,8 @@
 - id: tofu-fmt
   description: The tofu fmt command is used to rewrite OpenTofu configuration files to a canonical format and style.
   entry: tofu-fmt
-  exclude: \.tofu/.*$
-  files: (\.tofu|\.tfvars)$
+  exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
+  files: (\.tf|\.tofu|\.tfvars)$
   language: golang
   name: OpenTofu Format
   require_serial: true
@@ -10,7 +10,7 @@
 - id: tofu-validate
   description: The tofu validate command validates the configuration files in a directory, referring only to the configuration and not accessing any remote services such as remote state, provider APIs, etc.
   entry: tofu-validate
-  exclude: \.tofu/.*$
+  exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
   files: ^$
   pass_filenames: false
   always_run: true
