@@ -42,6 +42,12 @@ func main() {
 		os.Exit(0)
 	}
 
+	type tofuError struct {
+		step    string
+		relPath string
+		output  string
+	}
+	var errorMessages []tofuError
 	for _, dir := range dirsWithTf {
 		relPath := dir
 		if strings.HasPrefix(dir, rootDir) {
@@ -50,61 +56,75 @@ func main() {
 			relPath = rootDir[strings.LastIndex(rootDir, string(os.PathSeparator))+1:] + string(os.PathSeparator) + relPath
 		}
 		printStatus(outputs.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
-		err := runTofuCmdInDir(dir, []string{"init", "-input=false", "--backend=false"}, extraArgs)
+		out, err := runTofuCmdInDirWithOutput(dir, []string{"init", "-input=false", "--backend=false"}, extraArgs)
+		fmt.Print(out)
 		fmt.Println()
 		if err != nil {
-			printError(fmt.Sprintf("OpenTofu init failed in: %s", relPath), err, nil)
-			os.Exit(1)
+			errorMessages = append(errorMessages, tofuError{"init", relPath, out})
+			continue
 		}
 
 		printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
-		err = runTofuCmdInDir(dir, []string{"validate"}, extraArgs)
+		out, err = runTofuCmdInDirWithOutput(dir, []string{"validate"}, extraArgs)
+		fmt.Print(out)
 		fmt.Println()
 		if err != nil {
-			printError(fmt.Sprintf("OpenTofu validate failed in: %s", relPath), err, nil)
-			os.Exit(1)
+			errorMessages = append(errorMessages, tofuError{"validate", relPath, out})
+			continue
 		}
 	}
 
-	printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
-	fmt.Println()
+	if len(errorMessages) > 0 {
+	       fmt.Println(outputs.EmojiColorText("⚠️", "Validation Summary:", outputs.Yellow))
+	       fmt.Println()
+		for _, msg := range errorMessages {
+			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu %s failed in: %s\n%s\n", outputs.Red), msg.step, msg.relPath, msg.output)
+		}
+		os.Exit(1)
+	} else {
+		printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
+		fmt.Println()
+	}
 }
 
-// runTofuCmdInDir runs a tofu command in the specified directory, streaming and indenting output
-func runTofuCmdInDir(dir string, baseArgs, extraArgs []string) error {
+// runTofuCmdInDirWithOutput runs a tofu command in the specified directory, returns all output and error
+func runTofuCmdInDirWithOutput(dir string, baseArgs, extraArgs []string) (string, error) {
 	args := append(baseArgs, extraArgs...)
 	cmd := exec.Command("tofu", args...)
 	cmd.Dir = dir
+	var combinedOut strings.Builder
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return err
+		return "", err
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return err
+		return "", err
 	}
 	if err := cmd.Start(); err != nil {
-		return err
+		return "", err
 	}
 	done := make(chan struct{})
 	go func() {
-		scanAndIndent(stdoutPipe)
+		scanAndCollect(stdoutPipe, &combinedOut)
 		done <- struct{}{}
 	}()
 	go func() {
-		scanAndIndent(stderrPipe)
+		scanAndCollect(stderrPipe, &combinedOut)
 		done <- struct{}{}
 	}()
 	<-done
 	<-done
-	return cmd.Wait()
+	err = cmd.Wait()
+	return combinedOut.String(), err
 }
 
-// scanAndIndent prints each line from r with indentation
-func scanAndIndent(r io.Reader) {
+// scanAndCollect collects each line from r into out
+func scanAndCollect(r io.Reader, out *strings.Builder) {
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
-		fmt.Printf("    %s\n", scanner.Text())
+		line := scanner.Text()
+		out.WriteString("    " + line + "\n")
 	}
 }
 
@@ -142,9 +162,4 @@ func walkDirs(dir string, dirs *[]string) error {
 // printStatus prints a colored emoji status message
 func printStatus(emoji, msg string) {
 	fmt.Println(outputs.EmojiColorText(emoji, msg, outputs.Green))
-}
-
-// printError prints a colored error message with output
-func printError(prefix string, err error, output []byte) {
-	fmt.Printf(outputs.EmojiColorText(outputs.Error, "%s: %v\n%s", outputs.Red), prefix, err, output)
 }
