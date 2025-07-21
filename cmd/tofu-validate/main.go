@@ -2,13 +2,11 @@ package main
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 
 	"pre-commit-hooks/internal/outputs"
 )
@@ -51,49 +49,44 @@ func main() {
 			relPath = strings.TrimPrefix(relPath, string(os.PathSeparator))
 			relPath = rootDir[strings.LastIndex(rootDir, string(os.PathSeparator))+1:] + string(os.PathSeparator) + relPath
 		}
-		printStatus(outputs.Running, fmt.Sprintf("Running tofu init in %s...", relPath))
-		output, err := runTofuCmdInDir(dir, []string{"init", "-input=false", "--backend=false"}, extraArgs)
+		printStatus(outputs.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
+		err := runTofuCmdInDir(dir, []string{"init", "-input=false", "--backend=false"}, extraArgs)
 		fmt.Println()
 		if err != nil {
-			printError(fmt.Sprintf("OpenTofu init failed in %s", relPath), err, output)
+			printError(fmt.Sprintf("OpenTofu init failed in: %s", relPath), err, nil)
 			os.Exit(1)
 		}
 
-		printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in %s...", relPath))
-		output, err = runTofuCmdInDir(dir, []string{"validate"}, extraArgs)
+		printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
+		err = runTofuCmdInDir(dir, []string{"validate"}, extraArgs)
 		fmt.Println()
 		if err != nil {
-			printError(fmt.Sprintf("OpenTofu validate failed in %s", relPath), err, output)
+			printError(fmt.Sprintf("OpenTofu validate failed in: %s", relPath), err, nil)
 			os.Exit(1)
 		}
 	}
 
 	printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
+	fmt.Println()
 }
 
-// runTofuCmdInDir runs a tofu command in the specified directory
-func runTofuCmdInDir(dir string, baseArgs, extraArgs []string) ([]byte, error) {
+// runTofuCmdInDir runs a tofu command in the specified directory, streaming and indenting output
+func runTofuCmdInDir(dir string, baseArgs, extraArgs []string) error {
 	args := append(baseArgs, extraArgs...)
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "tofu", args...)
+	cmd := exec.Command("tofu", args...)
 	cmd.Dir = dir
-
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return nil, err
+		return err
 	}
-
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		return err
 	}
-
 	done := make(chan struct{})
-
 	go func() {
 		scanAndIndent(stdoutPipe)
 		done <- struct{}{}
@@ -102,18 +95,13 @@ func runTofuCmdInDir(dir string, baseArgs, extraArgs []string) ([]byte, error) {
 		scanAndIndent(stderrPipe)
 		done <- struct{}{}
 	}()
-
-	// Wait for both pipes to finish
 	<-done
 	<-done
-
-	err = cmd.Wait()
-	return nil, err
+	return cmd.Wait()
 }
 
 // scanAndIndent prints each line from r with indentation
 func scanAndIndent(r io.Reader) {
-
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		fmt.Printf("    %s\n", scanner.Text())
@@ -137,7 +125,7 @@ func walkDirs(dir string, dirs *[]string) error {
 		name := entry.Name()
 		// Skip hidden/system folders
 		if entry.IsDir() {
-			if strings.HasPrefix(name, ".") || name == "vendor" || name == "node_modules" || name == ".terraform" || name == ".git" {
+			if strings.HasPrefix(name, ".") || name == ".terraform" {
 				continue
 			}
 			walkDirs(dir+string(os.PathSeparator)+name, dirs)
