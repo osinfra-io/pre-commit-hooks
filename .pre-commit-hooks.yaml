@@ -8,6 +8,7 @@
   require_serial: true
 
 - id: tofu-validate
+  args: [shared]
   description: The tofu validate command validates the configuration files in a directory, referring only to the configuration and not accessing any remote services such as remote state, provider APIs, etc.
   entry: tofu-validate
   exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
