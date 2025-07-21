@@ -19,6 +19,12 @@ func main() {
 		fmt.Println("OpenTofu is not installed or not in PATH.")
 		os.Exit(1)
 	}
+	wd, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current directory:", err)
+		os.Exit(1)
+	}
+	fmt.Printf("Running tofu fmt in directory: %s\n", wd)
 
 	extraArgs := os.Args[1:]
 
