@@ -2,6 +2,7 @@ package tofu_validate
 
 import (
 	"os/exec"
+
 	"pre-commit-hooks/internal/testutil"
 )
 

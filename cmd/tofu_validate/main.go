@@ -11,8 +11,15 @@ import (
 )
 
 func main() {
+	// Only pass flags (arguments starting with '-') to tofu commands
+	extraArgs := []string{}
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "-") {
+			extraArgs = append(extraArgs, arg)
+		}
+	}
 	err := RunTofuValidateCLI(
-		os.Args[1:],
+		extraArgs,
 		tofu_validate.CheckOpenTofuInstalled,
 		os.Getwd,
 		findDirsWithTfFiles,
@@ -74,8 +81,7 @@ func RunTofuValidateCLI(
 		initCmd := []string{"init", "-input=false", "--backend=false"}
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
-		fmt.Print(out)
-		fmt.Println()
+		printIndentedOutput(out, true)
 		if err != nil {
 			errorMessages = append(errorMessages, tofuError{"init", relPath, out})
 			continue
@@ -83,8 +89,7 @@ func RunTofuValidateCLI(
 
 		printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
 		out, err = runValidate(dir, extraArgs)
-		fmt.Print(out)
-		fmt.Println()
+		printIndentedOutput(out, true)
 		if err != nil {
 			errorMessages = append(errorMessages, tofuError{"validate", relPath, out})
 			continue
@@ -95,10 +100,10 @@ func RunTofuValidateCLI(
 		fmt.Println(outputs.EmojiColorText("⚠️", "Validation Summary:", outputs.Yellow))
 		fmt.Println()
 		for _, msg := range errorMessages {
-			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu %s failed in: %s\n%s\n", outputs.Red), msg.step, msg.relPath, msg.output)
+			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu %s failed in: %s\n", outputs.Red), msg.step, msg.relPath)
+			printIndentedOutput(msg.output, false)
 		}
-		exit(1)
-		return fmt.Errorf("Some directories failed validation")
+		os.Exit(1)
 	} else {
 		printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
 		fmt.Println()
@@ -108,7 +113,7 @@ func RunTofuValidateCLI(
 
 // runCmdInDir runs a command in the specified directory, returns all output and error
 func runCmdInDir(dir string, args []string) (string, error) {
-	cmd := exec.Command(args[0], args[1:]...)
+	cmd := exec.Command("tofu", args...)
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	return string(out), err
@@ -143,6 +148,26 @@ func walkDirs(dir string, dirs *[]string) error {
 		*dirs = append(*dirs, dir)
 	}
 	return nil
+}
+
+// printIndentedOutput prints each line of output indented for better readability
+func printIndentedOutput(output string, addNewline bool) {
+	lines := strings.Split(output, "\n")
+	lastNonEmpty := -1
+	for idx := range lines {
+		if strings.TrimSpace(lines[idx]) != "" {
+			lastNonEmpty = idx
+		}
+	}
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			fmt.Printf("    %s\n", line)
+		}
+	}
+	// Only add newline if not already present at the end
+	if addNewline && lastNonEmpty != len(lines)-1 {
+		fmt.Println()
+	}
 }
 
 // printStatus prints a colored emoji status message

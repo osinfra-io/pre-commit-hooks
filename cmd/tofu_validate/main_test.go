@@ -5,9 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"pre-commit-hooks/internal/testutil"
 	"strings"
 	"testing"
+
+	"pre-commit-hooks/internal/testutil"
 )
 
 func Test_runCmdInDir(t *testing.T) {

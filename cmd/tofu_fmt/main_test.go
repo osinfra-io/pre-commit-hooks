@@ -6,10 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"testing"
+
 	"pre-commit-hooks/internal/outputs"
 	"pre-commit-hooks/internal/testutil"
 	tofu_fmt "pre-commit-hooks/internal/tofu_fmt"
-	"testing"
 )
 
 func TestRunTofuFmtCLI_AllBranches(t *testing.T) {

@@ -2,6 +2,7 @@ package tofu_fmt
 
 import (
 	"os/exec"
+
 	"pre-commit-hooks/internal/testutil"
 )
 

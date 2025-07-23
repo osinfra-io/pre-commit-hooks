@@ -4,7 +4,7 @@
   exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
   files: (\.tf|\.tofu|\.tfvars)$
   language: golang
-  name: OpenTofu Format
+  name: tofu fmt
   require_serial: true
 
 - id: tofu-validate
@@ -15,4 +15,4 @@
   pass_filenames: false
   always_run: true
   language: golang
-  name: OpenTofu Validate
+  name: tofu validate
