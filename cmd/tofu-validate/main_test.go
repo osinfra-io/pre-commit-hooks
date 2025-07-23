@@ -4,23 +4,19 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"pre-commit-hooks/internal/testutil"
 	"testing"
 )
 
-// TestCheckOpenTofuInstalled tests the checkOpenTofuInstalled function
+// TestCheckOpenTofuInstalled tests the shared CheckOpenTofuInstalled function
 func TestCheckOpenTofuInstalled(t *testing.T) {
-	// Test case 1: OpenTofu exists
-	// This test relies on the real function and will be skipped if tofu is not available
 	if _, err := exec.LookPath("tofu"); err == nil {
-		if !checkOpenTofuInstalled() {
-			t.Error("checkOpenTofuInstalled should return true when tofu is installed")
+		if !testutil.CheckOpenTofuInstalled() {
+			t.Error("CheckOpenTofuInstalled should return true when tofu is installed")
 		}
 	} else {
 		t.Skip("Skipping positive test as tofu is not installed")
 	}
-
-	// Test case 2: We can't easily test the negative case without modifying the PATH
-	// or using a custom function, so we'll just document this limitation
 	t.Log("Note: Unable to directly test the case where tofu is not installed")
 }
 
