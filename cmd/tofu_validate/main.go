@@ -1,45 +1,60 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
 
 	"pre-commit-hooks/internal/outputs"
+	tofu_validate "pre-commit-hooks/internal/tofu_validate"
 )
 
-func checkOpenTofuInstalled() bool {
-	_, err := exec.LookPath("tofu")
-	return err == nil
+func main() {
+	err := RunTofuValidateCLI(
+		os.Args[1:],
+		tofu_validate.CheckOpenTofuInstalled,
+		os.Getwd,
+		findDirsWithTfFiles,
+		runCmdInDir,
+		tofu_validate.RunTofuValidate,
+		printStatus,
+		os.Exit,
+	)
+	if err != nil {
+		os.Exit(1)
+	}
 }
 
-func main() {
-	if !checkOpenTofuInstalled() {
+// RunTofuValidateCLI runs the tofu validate CLI logic. Returns error if any step fails.
+func RunTofuValidateCLI(
+	extraArgs []string,
+	checkInstalled func() bool,
+	getwd func() (string, error),
+	findDirs func(string) []string,
+	runCmd func(string, []string) (string, error),
+	runValidate func(string, []string) (string, error),
+	printStatus func(string, string),
+	exit func(int),
+) error {
+	if !checkInstalled() {
 		fmt.Println("OpenTofu is not installed or not in PATH.")
-		os.Exit(1)
+		exit(1)
+		return fmt.Errorf("OpenTofu not installed")
 	}
 
-	// Only pass flags (arguments starting with '-') to tofu commands
-	extraArgs := []string{}
-	for _, arg := range os.Args[1:] {
-		if strings.HasPrefix(arg, "-") {
-			extraArgs = append(extraArgs, arg)
-		}
-	}
-
-	rootDir, err := os.Getwd()
+	rootDir, err := getwd()
 	if err != nil {
 		fmt.Println("Could not get working directory.")
-		os.Exit(1)
+		exit(1)
+		return err
 	}
 
-	dirsWithTf := findDirsWithTfFiles(rootDir)
+	dirsWithTf := findDirs(rootDir)
 	if len(dirsWithTf) == 0 {
 		fmt.Println("No directories with Terraform files found.")
-		os.Exit(0)
+		exit(0)
+		return nil
 	}
 
 	type tofuError struct {
@@ -56,7 +71,9 @@ func main() {
 			relPath = rootDir[strings.LastIndex(rootDir, string(os.PathSeparator))+1:] + string(os.PathSeparator) + relPath
 		}
 		printStatus(outputs.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
-		out, err := runTofuCmdInDirWithOutput(dir, []string{"init", "-input=false", "--backend=false"}, extraArgs)
+		initCmd := []string{"init", "-input=false", "--backend=false"}
+		cmdArgs := append(initCmd, extraArgs...)
+		out, err := runCmd(dir, cmdArgs)
 		fmt.Print(out)
 		fmt.Println()
 		if err != nil {
@@ -65,7 +82,7 @@ func main() {
 		}
 
 		printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
-		out, err = runTofuCmdInDirWithOutput(dir, []string{"validate"}, extraArgs)
+		out, err = runValidate(dir, extraArgs)
 		fmt.Print(out)
 		fmt.Println()
 		if err != nil {
@@ -75,57 +92,26 @@ func main() {
 	}
 
 	if len(errorMessages) > 0 {
-	       fmt.Println(outputs.EmojiColorText("⚠️", "Validation Summary:", outputs.Yellow))
-	       fmt.Println()
+		fmt.Println(outputs.EmojiColorText("⚠️", "Validation Summary:", outputs.Yellow))
+		fmt.Println()
 		for _, msg := range errorMessages {
 			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu %s failed in: %s\n%s\n", outputs.Red), msg.step, msg.relPath, msg.output)
 		}
-		os.Exit(1)
+		exit(1)
+		return fmt.Errorf("Some directories failed validation")
 	} else {
 		printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
 		fmt.Println()
 	}
+	return nil
 }
 
-// runTofuCmdInDirWithOutput runs a tofu command in the specified directory, returns all output and error
-func runTofuCmdInDirWithOutput(dir string, baseArgs, extraArgs []string) (string, error) {
-	args := append(baseArgs, extraArgs...)
-	cmd := exec.Command("tofu", args...)
+// runCmdInDir runs a command in the specified directory, returns all output and error
+func runCmdInDir(dir string, args []string) (string, error) {
+	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Dir = dir
-	var combinedOut strings.Builder
-	stdoutPipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return "", err
-	}
-	stderrPipe, err := cmd.StderrPipe()
-	if err != nil {
-		return "", err
-	}
-	if err := cmd.Start(); err != nil {
-		return "", err
-	}
-	done := make(chan struct{})
-	go func() {
-		scanAndCollect(stdoutPipe, &combinedOut)
-		done <- struct{}{}
-	}()
-	go func() {
-		scanAndCollect(stderrPipe, &combinedOut)
-		done <- struct{}{}
-	}()
-	<-done
-	<-done
-	err = cmd.Wait()
-	return combinedOut.String(), err
-}
-
-// scanAndCollect collects each line from r into out
-func scanAndCollect(r io.Reader, out *strings.Builder) {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := scanner.Text()
-		out.WriteString("    " + line + "\n")
-	}
+	out, err := cmd.CombinedOutput()
+	return string(out), err
 }
 
 // findDirsWithTfFiles recursively finds directories containing .tf files
