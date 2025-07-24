@@ -103,7 +103,8 @@ func RunTofuValidateCLI(
 			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu %s failed in: %s\n", outputs.Red), msg.step, msg.relPath)
 			printIndentedOutput(msg.output, false)
 		}
-		os.Exit(1)
+		exit(1)
+		return fmt.Errorf("validation failed")
 	} else {
 		printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
 		fmt.Println()
