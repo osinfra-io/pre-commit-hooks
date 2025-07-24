@@ -1,4 +1,4 @@
-package tofu_fmt
+package tofufmt
 
 import (
 	"os/exec"

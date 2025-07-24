@@ -6,15 +6,15 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/output"
-	tofu_fmt "pre-commit-hooks/internal/tofufmt"
+	tofufmt "pre-commit-hooks/internal/tofufmt"
 )
 
 func main() {
 	err := RunTofuFmtCLI(
 		os.Args[1:],
 		os.Getwd,
-		tofu_fmt.RunTofuFmt,
-		tofu_fmt.FormatFiles,
+		tofufmt.RunTofuFmt,
+		tofufmt.FormatFiles,
 	)
 	if err != nil {
 		os.Exit(1)
@@ -28,7 +28,7 @@ func RunTofuFmtCLI(
 	runTofuFmt func(string, []string) (string, error),
 	formatFiles func(string, []string) error,
 ) error {
-	if !tofu_fmt.CheckOpenTofuInstalled() {
+	if !tofufmt.CheckOpenTofuInstalled() {
 		fmt.Println("OpenTofu is not installed or not in PATH.")
 		return fmt.Errorf("OpenTofu not installed")
 	}

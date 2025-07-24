@@ -1,4 +1,4 @@
-package tofu_validate
+package tofuvalidate
 
 import (
 	"os/exec"
