@@ -4,6 +4,26 @@ import (
 	"testing"
 )
 
+func TestEmojiColorText(t *testing.T) {
+	cases := []struct {
+		name  string
+		emoji string
+		text  string
+		color string
+		want  string
+	}{
+		{"Red with Error", Error, "fail", Red, Error + " " + Colorize("fail", Red)},
+		{"Green with ThumbsUp", ThumbsUp, "ok", Green, ThumbsUp + " " + Colorize("ok", Green)},
+		{"Yellow with Warning", Warning, "warn", Yellow, Warning + " " + Colorize("warn", Yellow)},
+	}
+	for _, c := range cases {
+		got := EmojiColorText(c.emoji, c.text, c.color)
+		if got != c.want {
+			t.Errorf("%s: got %q, want %q", c.name, got, c.want)
+		}
+	}
+}
+
 func TestResetColor(t *testing.T) {
 	// Test Reset constant value
 	if Reset != "\033[0m" {
