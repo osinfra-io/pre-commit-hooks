@@ -2,6 +2,7 @@ package tofu_fmt
 
 import (
 	"os"
+	"pre-commit-hooks/internal/testutil"
 	"strings"
 	"testing"
 )
@@ -12,14 +13,9 @@ func TestCheckOpenTofuInstalled(t *testing.T) {
 }
 
 func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
-	if !CheckOpenTofuInstalled() {
-		t.Skip("Skipping: tofu is not installed")
-	}
-	tempDir, err := os.MkdirTemp("", "fmt_test_multi")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	testutil.SkipIfTofuNotInstalled(t)
+	tempDir, cleanup := testutil.CreateTempDir(t, "fmt_test_multi")
+	defer cleanup()
 
 	// Table of files to create: path, content, expected after format
 	files := []struct {
@@ -72,14 +68,9 @@ func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
 }
 
 func TestRunTofuFmt_UnformattedFile(t *testing.T) {
-	if !CheckOpenTofuInstalled() {
-		t.Skip("Skipping: tofu is not installed")
-	}
-	tempDir, err := os.MkdirTemp("", "fmt_test_unformatted")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	testutil.SkipIfTofuNotInstalled(t)
+	tempDir, cleanup := testutil.CreateTempDir(t, "fmt_test_unformatted")
+	defer cleanup()
 
 	// Create an unformatted .tf file
 	filePath := tempDir + "/main.tf"

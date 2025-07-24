@@ -51,7 +51,7 @@ func RunTofuFmtCLI(
 		fmtErr := formatFiles(wd, extraArgs)
 		fmt.Println()
 		if fmtErr != nil {
-			printStatus(outputs.Error, "Error running tofu fmt:")
+			fmt.Println(outputs.EmojiColorText(outputs.Error, "Error running tofu fmt:", outputs.Red))
 			fmt.Println(fmtErr)
 			return fmtErr
 		}

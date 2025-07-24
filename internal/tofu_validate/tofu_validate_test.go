@@ -3,6 +3,7 @@ package tofu_validate
 import (
 	"os"
 	"os/exec"
+	"pre-commit-hooks/internal/testutil"
 	"testing"
 )
 
@@ -11,14 +12,9 @@ func TestCheckOpenTofuInstalled(t *testing.T) {
 }
 
 func TestRunTofuValidate_ValidConfig(t *testing.T) {
-	if !CheckOpenTofuInstalled() {
-		t.Skip("Skipping: tofu is not installed")
-	}
-	tempDir, err := os.MkdirTemp("", "validate_test_valid")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	testutil.SkipIfTofuNotInstalled(t)
+	tempDir, cleanup := testutil.CreateTempDir(t, "validate_test_valid")
+	defer cleanup()
 
 	// Create valid .tf file
 	filePath := tempDir + "/main.tf"
@@ -47,14 +43,9 @@ resource "null_resource" "example" {}`
 }
 
 func TestRunTofuValidate_InvalidConfig(t *testing.T) {
-	if !CheckOpenTofuInstalled() {
-		t.Skip("Skipping: tofu is not installed")
-	}
-	tempDir, err := os.MkdirTemp("", "validate_test_invalid")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	testutil.SkipIfTofuNotInstalled(t)
+	tempDir, cleanup := testutil.CreateTempDir(t, "validate_test_invalid")
+	defer cleanup()
 
 	// Create invalid .tf file
 	filePath := tempDir + "/main.tf"

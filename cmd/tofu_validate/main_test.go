@@ -235,26 +235,17 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 
 // TestCheckOpenTofuInstalled tests the shared CheckOpenTofuInstalled function
 func TestCheckOpenTofuInstalled(t *testing.T) {
-	if _, err := exec.LookPath("tofu"); err == nil {
-		if !testutil.CheckOpenTofuInstalled() {
-			t.Error("CheckOpenTofuInstalled should return true when tofu is installed")
-		}
-	} else {
-		t.Skip("Skipping positive test as tofu is not installed")
+	testutil.SkipIfTofuNotInstalled(t)
+	if !testutil.CheckOpenTofuInstalled() {
+		t.Error("CheckOpenTofuInstalled should return true when tofu is installed")
 	}
-	t.Log("Note: Unable to directly test the case where tofu is not installed")
 }
 
 // TestValidOpenTofuConfig tests that a valid config passes validation
 func TestValidOpenTofuConfig(t *testing.T) {
-	if _, err := exec.LookPath("tofu"); err != nil {
-		t.Skip("Skipping test as tofu is not installed")
-	}
-	tempDir, err := os.MkdirTemp("", "tofu_validate_test")
-	if err != nil {
-		t.Fatalf("Failed to create temp directory: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	testutil.SkipIfTofuNotInstalled(t)
+	tempDir, cleanup := testutil.CreateTempDir(t, "tofu_validate_test")
+	defer cleanup()
 	validDir := filepath.Join(tempDir, "valid")
 	if err := os.Mkdir(validDir, 0755); err != nil {
 		t.Fatalf("Failed to create valid config directory: %v", err)
@@ -271,14 +262,8 @@ resource "local_file" "example" {
 	if err := os.WriteFile(validFilePath, []byte(validContent), 0644); err != nil {
 		t.Fatalf("Failed to write valid file: %v", err)
 	}
-	originalDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get current working directory: %v", err)
-	}
-	defer os.Chdir(originalDir)
-	if err := os.Chdir(validDir); err != nil {
-		t.Fatalf("Failed to change directory to %s: %v", validDir, err)
-	}
+	restore := testutil.RestoreWorkingDir(t, validDir)
+	defer restore()
 	initCmd := exec.Command("tofu", "init")
 	if initOutput, err := initCmd.CombinedOutput(); err != nil {
 		t.Fatalf("Failed to initialize tofu: %v, output: %s", err, initOutput)
@@ -303,7 +288,7 @@ func TestInvalidOpenTofuConfig(t *testing.T) {
 	if err := os.Mkdir(invalidDir, 0755); err != nil {
 		t.Fatalf("Failed to create invalid config directory: %v", err)
 	}
-	invalidContent := `tofu {
+	invalidContent := `terraform {
   required_version = ">= 1.0.0"
   # Missing closing brace intentionally`
 	invalidFilePath := filepath.Join(invalidDir, "main.tf")
