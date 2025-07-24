@@ -10,11 +10,10 @@ import (
 )
 
 func TestCheckOpenTofuInstalled(t *testing.T) {
+	testutil.SkipIfTofuNotInstalled(t)
 	got := CheckOpenTofuInstalled()
-	if got {
-		t.Log("CheckOpenTofuInstalled returned true: tofu is installed or mocked as installed.")
-	} else {
-		t.Log("CheckOpenTofuInstalled returned false: tofu is not installed or is mocked as not installed.")
+	if !got {
+		t.Error("Expected CheckOpenTofuInstalled to return true when tofu is installed, but got false.")
 	}
 }
 
