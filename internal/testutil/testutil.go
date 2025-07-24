@@ -47,6 +47,7 @@ func RestoreWorkingDir(t *testing.T, newDir string) func() {
 
 // RunCmd runs a command and returns its combined output and error
 func RunCmd(name string, args ...string) (string, error) {
+        // no-dd-sa:go-security/command-injection - https://github.com/osinfra-io/pre-commit-hooks/issues/8
 	cmd := exec.Command(name, args...)
 	out, err := cmd.CombinedOutput()
 	return string(out), err
