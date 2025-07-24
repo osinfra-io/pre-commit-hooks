@@ -276,14 +276,9 @@ resource "local_file" "example" {
 
 // TestInvalidOpenTofuConfig tests that an invalid config fails validation
 func TestInvalidOpenTofuConfig(t *testing.T) {
-	if _, err := exec.LookPath("tofu"); err != nil {
-		t.Skip("Skipping test as tofu is not installed")
-	}
-	tempDir, err := os.MkdirTemp("", "tofu_validate_test")
-	if err != nil {
-		t.Fatalf("Failed to create temp directory: %v", err)
-	}
-	defer os.RemoveAll(tempDir)
+	testutil.SkipIfTofuNotInstalled(t)
+	tempDir, cleanup := testutil.CreateTempDir(t, "tofu_validate_test")
+	defer cleanup()
 	invalidDir := filepath.Join(tempDir, "invalid")
 	if err := os.Mkdir(invalidDir, 0755); err != nil {
 		t.Fatalf("Failed to create invalid config directory: %v", err)
