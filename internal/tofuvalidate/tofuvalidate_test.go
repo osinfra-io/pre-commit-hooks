@@ -10,8 +10,14 @@ import (
 )
 
 func TestCheckOpenTofuInstalled(t *testing.T) {
-	_ = CheckOpenTofuInstalled()
 	got := CheckOpenTofuInstalled()
+	// Try to look up the tofu binary directly to determine the expected result
+	_, err := exec.LookPath("tofu")
+	expected := err == nil
+	if got != expected {
+		t.Errorf("CheckOpenTofuInstalled() = %v, want %v (tofu binary presence: %v)", got, expected, err)
+	}
+	// Optionally log for debug
 	if got {
 		t.Log("CheckOpenTofuInstalled returned true: tofu is installed or mocked as installed.")
 	} else {
