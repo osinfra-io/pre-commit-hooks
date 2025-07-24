@@ -72,11 +72,9 @@ func RunTofuValidateCLI(
 	}
 	var errorMessages []tofuError
 	for _, dir := range dirsWithTf {
-		relPath := dir
-		if strings.HasPrefix(dir, rootDir) {
-			relPath = strings.TrimPrefix(dir, rootDir)
-			relPath = strings.TrimPrefix(relPath, string(os.PathSeparator))
-			relPath = rootDir[strings.LastIndex(rootDir, string(os.PathSeparator))+1:] + string(os.PathSeparator) + relPath
+		relPath, err := filepath.Rel(rootDir, dir)
+		if err != nil {
+			relPath = dir // fallback to absolute path
 		}
 		printStatus(output.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
 		initCmd := []string{"init", "-input=false", "--backend=false"}
