@@ -68,7 +68,7 @@ func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
 		if !strings.HasSuffix(f.relPath, ".tf") {
 			continue // skip non-tf files
 		}
-		fullPath := tempDir + "/" + f.relPath
+		fullPath := filepath.Join(tempDir, f.relPath)
 		result, err := os.ReadFile(fullPath)
 		if err != nil {
 			t.Fatalf("Failed to read file %s: %v", fullPath, err)
