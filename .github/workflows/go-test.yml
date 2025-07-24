@@ -1,0 +1,39 @@
+name: Go Tests
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    name: "Go: Test"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.5
+
+      - name: Run tests and save output
+        run: |
+          go test ./... | tee test-results.txt
+          go test -coverprofile=cover.out ./...
+          go tool cover -func=cover.out | tee coverage.txt
+
+      - name: Add test results to summary
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const testResults = fs.readFileSync('test-results.txt', 'utf8');
+            const coverage = fs.readFileSync('coverage.txt', 'utf8');
+            core.summary
+              .addHeading('Go Test Results')
+              .addCodeBlock(testResults)
+              .addHeading('Coverage Summary')
+              .addCodeBlock(coverage)
+              .write();
