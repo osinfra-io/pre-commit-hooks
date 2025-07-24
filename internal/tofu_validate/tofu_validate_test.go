@@ -3,12 +3,19 @@ package tofu_validate
 import (
 	"os"
 	"os/exec"
+	"path/filepath"
 	"pre-commit-hooks/internal/testutil"
 	"testing"
 )
 
 func TestCheckOpenTofuInstalled(t *testing.T) {
 	_ = CheckOpenTofuInstalled()
+	got := CheckOpenTofuInstalled()
+	if got {
+		t.Log("CheckOpenTofuInstalled returned true: tofu is installed or mocked as installed.")
+	} else {
+		t.Log("CheckOpenTofuInstalled returned false: tofu is not installed or is mocked as not installed.")
+	}
 }
 
 func TestRunTofuValidate_ValidConfig(t *testing.T) {
@@ -17,7 +24,7 @@ func TestRunTofuValidate_ValidConfig(t *testing.T) {
 	defer cleanup()
 
 	// Create valid .tf file
-	filePath := tempDir + "/main.tf"
+	filePath := filepath.Join(tempDir, "main.tf")
 	valid := `terraform {
   required_version = ">= 1.0.0"
 }
@@ -47,8 +54,7 @@ func TestRunTofuValidate_InvalidConfig(t *testing.T) {
 	tempDir, cleanup := testutil.CreateTempDir(t, "validate_test_invalid")
 	defer cleanup()
 
-	// Create invalid .tf file
-	filePath := tempDir + "/main.tf"
+	filePath := filepath.Join(tempDir, "main.tf")
 	invalid := `terraform {
   required_version = ">= 1.0.0"
   # Missing closing brace intentionally`
@@ -56,7 +62,7 @@ func TestRunTofuValidate_InvalidConfig(t *testing.T) {
 		t.Fatalf("Failed to write test file: %v", err)
 	}
 
-	// Run tofu init first
+	// Run tofu init first (expected to fail, but test continues to run validation and checks for an error there; test does not pass solely on init failure)
 	initCmd := []string{"init", "-input=false", "--backend=false"}
 	cmd := exec.Command("tofu", initCmd...)
 	cmd.Dir = tempDir

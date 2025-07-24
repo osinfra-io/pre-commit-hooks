@@ -62,9 +62,9 @@ func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 }
 
 func TestRunTofuFmtCLI_NotInstalled(t *testing.T) {
-	oldPath := os.Getenv("PATH")
-	os.Setenv("PATH", "")
-	defer os.Setenv("PATH", oldPath)
+	origCheck := tofu_fmt.CheckOpenTofuInstalled
+	tofu_fmt.CheckOpenTofuInstalled = func() bool { return false }
+	defer func() { tofu_fmt.CheckOpenTofuInstalled = origCheck }()
 	err := RunTofuFmtCLI([]string{}, os.Getwd, tofu_fmt.RunTofuFmt, tofu_fmt.FormatFiles)
 	if err == nil {
 		t.Error("Expected error when OpenTofu is not installed")

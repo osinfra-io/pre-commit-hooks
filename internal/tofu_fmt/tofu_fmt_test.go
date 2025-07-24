@@ -2,14 +2,19 @@ package tofu_fmt
 
 import (
 	"os"
+	"path/filepath"
 	"pre-commit-hooks/internal/testutil"
 	"strings"
 	"testing"
 )
 
 func TestCheckOpenTofuInstalled(t *testing.T) {
-	// Should return true if tofu is installed, false otherwise
-	_ = CheckOpenTofuInstalled()
+	got := CheckOpenTofuInstalled()
+	if got {
+		t.Log("CheckOpenTofuInstalled returned true: tofu is installed or mocked as installed.")
+	} else {
+		t.Log("CheckOpenTofuInstalled returned false: tofu is not installed or is mocked as not installed.")
+	}
 }
 
 func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
@@ -31,9 +36,15 @@ func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
 
 	// Create files
 	for _, f := range files {
-		fullPath := tempDir + "/" + f.relPath
-		if err := os.MkdirAll(fullPath[:len(fullPath)-len(f.relPath)+strings.LastIndex(f.relPath, "/")], 0755); err != nil {
-			// Ignore error if no subdir
+		fullPath := filepath.Join(tempDir, f.relPath)
+		dirPath := fullPath
+		if idx := strings.LastIndex(fullPath, "/"); idx != -1 {
+			dirPath = fullPath[:idx]
+		} else {
+			dirPath = tempDir
+		}
+		if err := os.MkdirAll(dirPath, 0755); err != nil {
+			t.Fatalf("Failed to create directory %s: %v", dirPath, err)
 		}
 		if err := os.WriteFile(fullPath, []byte(f.content), 0644); err != nil {
 			t.Fatalf("Failed to write test file %s: %v", fullPath, err)
@@ -73,7 +84,7 @@ func TestRunTofuFmt_UnformattedFile(t *testing.T) {
 	defer cleanup()
 
 	// Create an unformatted .tf file
-	filePath := tempDir + "/main.tf"
+	filePath := filepath.Join(tempDir, "main.tf")
 	unformatted := "variable   \"foo\"   {}"
 	formatted := "variable \"foo\" {}"
 	if err := os.WriteFile(filePath, []byte(unformatted), 0644); err != nil {

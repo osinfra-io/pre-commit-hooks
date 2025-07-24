@@ -16,11 +16,11 @@ jobs:
         with:
           go-version: 1.24.5
 
-      - name: Run tests
+      - name: Run tests and save output
         run: |
-          go test -v ./...
+          go test -v ./... | tee test-results.txt
           go test -coverprofile=cover.out ./...
-          go tool cover -func=cover.out
+          go tool cover -func=cover.out | tee coverage.txt
 
       - name: Add test results to summary
         continue-on-error: true

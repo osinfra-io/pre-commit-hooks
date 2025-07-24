@@ -19,12 +19,14 @@ func Colorize(text, color string) string {
 
 // Emoji constants
 const (
-	Error      = "💀"
-	Warning    = "🚧"
-	Running    = "⚙️"
-	ThumbsUp   = "👍"
-	ThumbsDown = "👎"
-	Diamond    = "🔸"
+	// Error: Indicates a failure or error condition
+	Error = "💀"
+	// Warning: Indicates a warning or something that needs attention
+	Warning = "🚧"
+	// Running: Indicates an ongoing process or operation
+	Running = "⚙️"
+	// ThumbsUp: Indicates success or positive outcome
+	ThumbsUp = "👍"
 )
 
 // Generic function to combine emoji and colored text

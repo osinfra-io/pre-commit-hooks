@@ -39,7 +39,9 @@ func RestoreWorkingDir(t *testing.T, newDir string) func() {
 		t.Fatalf("Failed to change directory to %s: %v", newDir, err)
 	}
 	return func() {
-		os.Chdir(origDir)
+		if err := os.Chdir(origDir); err != nil {
+			t.Errorf("Failed to restore original directory %s: %v", origDir, err)
+		}
 	}
 }
 

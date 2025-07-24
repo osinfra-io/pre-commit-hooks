@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"pre-commit-hooks/internal/outputs"
@@ -140,7 +141,10 @@ func walkDirs(dir string, dirs *[]string) error {
 			if strings.HasPrefix(name, ".") || name == ".terraform" {
 				continue
 			}
-			walkDirs(dir+string(os.PathSeparator)+name, dirs)
+			path := filepath.Join(dir, name)
+			if err := walkDirs(path, dirs); err != nil {
+				return err
+			}
 		} else if strings.HasSuffix(name, ".tf") {
 			hasTf = true
 		}
