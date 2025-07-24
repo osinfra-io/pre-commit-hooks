@@ -42,8 +42,8 @@ func TestPrintErrorSummary(t *testing.T) {
 	w.Close()
 	outBytes, _ := io.ReadAll(r)
 	output := string(outBytes)
-	if !strings.Contains(output, "Validation Summary:") {
-		t.Errorf("Expected validation summary header, got: %s", output)
+	if !strings.Contains(output, "Error Summary:") {
+		t.Errorf("Expected error summary header, got: %s", output)
 	}
 	if !strings.Contains(output, "OpenTofu validate failed in: dir3") {
 		t.Errorf("Expected error details, got: %s", output)
