@@ -37,12 +37,7 @@ func TestRunTofuFmt_MultiFileAndNested(t *testing.T) {
 	// Create files
 	for _, f := range files {
 		fullPath := filepath.Join(tempDir, f.relPath)
-		dirPath := fullPath
-		if idx := strings.LastIndex(fullPath, "/"); idx != -1 {
-			dirPath = fullPath[:idx]
-		} else {
-			dirPath = tempDir
-		}
+		dirPath := filepath.Dir(fullPath)
 		if err := os.MkdirAll(dirPath, 0755); err != nil {
 			t.Fatalf("Failed to create directory %s: %v", dirPath, err)
 		}
