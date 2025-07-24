@@ -65,12 +65,13 @@ func RunTofuValidateCLI(
 		return nil
 	}
 
-	type tofuError struct {
+	type tofuMessage struct {
 		step    string
 		relPath string
 		output  string
 	}
-	var errorMessages []tofuError
+	var errorMessages []tofuMessage
+	var warningMessages []tofuMessage
 	for _, dir := range dirsWithTf {
 		relPath, err := filepath.Rel(rootDir, dir)
 		if err != nil {
@@ -81,22 +82,61 @@ func RunTofuValidateCLI(
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
 		printIndentedOutput(out, true)
+		// Always check for warnings in init output
+		if strings.Contains(strings.ToLower(out), "warning") {
+			warningMessages = append(warningMessages, tofuMessage{"init", relPath, out})
+		}
 		if err != nil {
-			errorMessages = append(errorMessages, tofuError{"init", relPath, out})
+			errorMessages = append(errorMessages, tofuMessage{"init", relPath, out})
 			continue
 		}
 
 		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
 		out, err = runValidate(dir, extraArgs)
 		printIndentedOutput(out, true)
+		// Always check for warnings in validate output
+		if strings.Contains(strings.ToLower(out), "warning") {
+			warningMessages = append(warningMessages, tofuMessage{"validate", relPath, out})
+		}
 		if err != nil {
-			errorMessages = append(errorMessages, tofuError{"validate", relPath, out})
+			// Only treat as error if not a warning (warnings already handled above)
+			if !strings.Contains(strings.ToLower(out), "warning") {
+				errorMessages = append(errorMessages, tofuMessage{"validate", relPath, out})
+			}
 			continue
 		}
 	}
 
+	if len(warningMessages) > 0 {
+		fmt.Println(output.EmojiColorText("⚠️", "Warning Summary:", output.Yellow))
+		fmt.Println()
+		for _, msg := range warningMessages {
+			fmt.Printf(output.EmojiColorText(output.Warning, "OpenTofu %s warning in: %s\n", output.Yellow), msg.step, msg.relPath)
+			// Extract and print only the warning block
+			lines := strings.Split(msg.output, "\n")
+			inWarning := false
+			warningBlockEnded := false
+			for _, line := range lines {
+				trimmed := strings.TrimSpace(line)
+				// Start warning block
+				if strings.Contains(trimmed, "Warning:") {
+					inWarning = true
+				}
+				// Print lines in warning block
+				if inWarning && !warningBlockEnded {
+					fmt.Printf("    %s\n", line)
+					// End block if this line is a border (╵)
+					if strings.HasPrefix(trimmed, "╵") {
+						warningBlockEnded = true
+					}
+				}
+			}
+			fmt.Println()
+		}
+	}
+
 	if len(errorMessages) > 0 {
-		fmt.Println(output.EmojiColorText("⚠️", "Validation Summary:", output.Yellow))
+		fmt.Println(output.EmojiColorText("❗", "Validation Summary:", output.Yellow))
 		fmt.Println()
 		for _, msg := range errorMessages {
 			fmt.Printf(output.EmojiColorText(output.Error, "OpenTofu %s failed in: %s\n", output.Red), msg.step, msg.relPath)
@@ -105,6 +145,14 @@ func RunTofuValidateCLI(
 		exit(1)
 		return fmt.Errorf("validation failed")
 	}
+
+	if len(warningMessages) > 0 {
+		printStatus(output.ThumbsUp, "OpenTofu validate completed with warnings.")
+		fmt.Println()
+		exit(0)
+		return nil
+	}
+
 	printStatus(output.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
 	fmt.Println()
 	return nil
