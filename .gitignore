@@ -12,3 +12,6 @@
 *.gz
 *.tgz
 *.tar
+*.exe
+tofufmt
+tofuvalidate
