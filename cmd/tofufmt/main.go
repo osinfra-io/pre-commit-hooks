@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"pre-commit-hooks/internal/outputs"
+	"pre-commit-hooks/internal/output"
 	tofu_fmt "pre-commit-hooks/internal/tofufmt"
 )
 
@@ -40,25 +40,25 @@ func RunTofuFmtCLI(
 	dirName := wd[strings.LastIndex(wd, string(os.PathSeparator))+1:]
 	fmt.Printf("Running tofu fmt recursively in directory: %s\n", dirName)
 
-	printStatus(outputs.Running, "Running tofu fmt...")
+	printStatus(output.Running, "Running tofu fmt...")
 
 	output, err := runTofuFmt(wd, extraArgs)
 	fmt.Println()
 	if err != nil {
-		fmt.Println(outputs.EmojiColorText(outputs.Warning, "Found unformatted OpenTofu files:", outputs.Yellow))
+		fmt.Println(output.EmojiColorText(output.Warning, "Found unformatted OpenTofu files:", output.Yellow))
 		fmt.Println(output)
-		printStatus(outputs.Running, "Formatting files with tofu fmt...")
+		printStatus(output.Running, "Formatting files with tofu fmt...")
 		fmtErr := formatFiles(wd, extraArgs)
 		fmt.Println()
 		if fmtErr != nil {
-			fmt.Println(outputs.EmojiColorText(outputs.Error, "Error running tofu fmt:", outputs.Red))
+			fmt.Println(output.EmojiColorText(output.Error, "Error running tofu fmt:", output.Red))
 			fmt.Println(fmtErr)
 			return fmtErr
 		}
-		printStatus(outputs.ThumbsUp, "Files formatted successfully with tofu fmt.")
+		printStatus(output.ThumbsUp, "Files formatted successfully with tofu fmt.")
 		fmt.Println()
 	} else {
-		printStatus(outputs.ThumbsUp, "All OpenTofu files are formatted.")
+		printStatus(output.ThumbsUp, "All OpenTofu files are formatted.")
 		fmt.Println()
 	}
 	return nil
@@ -66,5 +66,5 @@ func RunTofuFmtCLI(
 
 // printStatus prints a colored emoji status message
 func printStatus(emoji, msg string) {
-	fmt.Println(outputs.EmojiColorText(emoji, msg, outputs.Green))
+	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
 }

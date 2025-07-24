@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"pre-commit-hooks/internal/outputs"
+	"pre-commit-hooks/internal/output"
 	tofu_validate "pre-commit-hooks/internal/tofuvalidate"
 )
 
@@ -78,7 +78,7 @@ func RunTofuValidateCLI(
 			relPath = strings.TrimPrefix(relPath, string(os.PathSeparator))
 			relPath = rootDir[strings.LastIndex(rootDir, string(os.PathSeparator))+1:] + string(os.PathSeparator) + relPath
 		}
-		printStatus(outputs.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
+		printStatus(output.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
 		initCmd := []string{"init", "-input=false", "--backend=false"}
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
@@ -88,7 +88,7 @@ func RunTofuValidateCLI(
 			continue
 		}
 
-		printStatus(outputs.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
+		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
 		out, err = runValidate(dir, extraArgs)
 		printIndentedOutput(out, true)
 		if err != nil {
@@ -98,16 +98,16 @@ func RunTofuValidateCLI(
 	}
 
 	if len(errorMessages) > 0 {
-		fmt.Println(outputs.EmojiColorText("⚠️", "Validation Summary:", outputs.Yellow))
+		fmt.Println(output.EmojiColorText("⚠️", "Validation Summary:", output.Yellow))
 		fmt.Println()
 		for _, msg := range errorMessages {
-			fmt.Printf(outputs.EmojiColorText(outputs.Error, "OpenTofu %s failed in: %s\n", outputs.Red), msg.step, msg.relPath)
+			fmt.Printf(output.EmojiColorText(output.Error, "OpenTofu %s failed in: %s\n", output.Red), msg.step, msg.relPath)
 			printIndentedOutput(msg.output, false)
 		}
 		exit(1)
 		return fmt.Errorf("validation failed")
 	} else {
-		printStatus(outputs.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
+		printStatus(output.ThumbsUp, "OpenTofu validate completed successfully for all directories.")
 		fmt.Println()
 	}
 	return nil
@@ -177,5 +177,5 @@ func printIndentedOutput(output string, addNewline bool) {
 
 // printStatus prints a colored emoji status message
 func printStatus(emoji, msg string) {
-	fmt.Println(outputs.EmojiColorText(emoji, msg, outputs.Green))
+	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
 }
