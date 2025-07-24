@@ -290,14 +290,8 @@ func TestInvalidOpenTofuConfig(t *testing.T) {
 	if err := os.WriteFile(invalidFilePath, []byte(invalidContent), 0644); err != nil {
 		t.Fatalf("Failed to write invalid file: %v", err)
 	}
-	originalDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Failed to get current working directory: %v", err)
-	}
-	defer os.Chdir(originalDir)
-	if err := os.Chdir(invalidDir); err != nil {
-		t.Fatalf("Failed to change directory to %s: %v", invalidDir, err)
-	}
+	restore := testutil.RestoreWorkingDir(t, invalidDir)
+	defer restore()
 	validateCmd := exec.Command("tofu", "validate")
 	output, err := validateCmd.CombinedOutput()
 	if err == nil {
