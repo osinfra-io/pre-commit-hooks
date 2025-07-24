@@ -44,7 +44,22 @@ func RunTofuFmtCLI(
 
 	outputStr, err := runTofuFmt(wd, extraArgs)
 	fmt.Println()
-	if err != nil {
+	
+	// Parse output to distinguish warnings from errors
+	parsed := output.ParseTofuOutput(outputStr, err)
+	
+	// Print any warnings found
+	if len(parsed.Warnings) > 0 {
+		output.PrintWarnings(parsed.Warnings)
+	}
+	
+	if parsed.HasError {
+		// Actual errors should fail the command
+		fmt.Println(output.EmojiColorText(output.Error, "Error running tofu fmt:", output.Red))
+		fmt.Println(outputStr)
+		return fmt.Errorf("tofu fmt failed")
+	} else if err != nil && len(parsed.Warnings) == 0 {
+		// Non-zero exit with no warnings means files need formatting
 		fmt.Println(output.EmojiColorText(output.Warning, "Found unformatted OpenTofu files:", output.Yellow))
 		fmt.Println(outputStr)
 		printStatus(output.Running, "Formatting files with tofu fmt...")

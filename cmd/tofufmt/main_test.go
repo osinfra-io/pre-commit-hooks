@@ -31,6 +31,7 @@ func TestRunTofuFmtCLI_AllBranches(t *testing.T) {
 		{"all formatted", mockArgs{checkInstalled: true}, false},
 		{"unformatted, format ok", mockArgs{checkInstalled: true, runFmtErr: fmt.Errorf("unformatted"), runFmtOut: "needs format"}, false},
 		{"unformatted, format fails", mockArgs{checkInstalled: true, runFmtErr: fmt.Errorf("unformatted"), runFmtOut: "needs format", formatErr: fmt.Errorf("format fail")}, true},
+		{"warning only - should not fail", mockArgs{checkInstalled: true, runFmtErr: fmt.Errorf("warning"), runFmtOut: "Warning: Some formatting warning\n\nThis is just a warning."}, false},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

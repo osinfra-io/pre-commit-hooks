@@ -71,6 +71,7 @@ func RunTofuValidateCLI(
 		output  string
 	}
 	var errorMessages []tofuError
+	var allWarnings []string
 	for _, dir := range dirsWithTf {
 		relPath, err := filepath.Rel(rootDir, dir)
 		if err != nil {
@@ -80,19 +81,47 @@ func RunTofuValidateCLI(
 		initCmd := []string{"init", "-input=false", "--backend=false"}
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
+		
+		// Parse output to distinguish warnings from errors
+		parsed := output.ParseTofuOutput(out, err)
+		
+		// Add warnings to the global collection
+		for _, warning := range parsed.Warnings {
+			allWarnings = append(allWarnings, fmt.Sprintf("In %s (init): %s", relPath, warning))
+		}
+		
 		printIndentedOutput(out, true)
-		if err != nil {
+		
+		// Only treat as error if there are actual errors, not just warnings
+		if parsed.HasError {
 			errorMessages = append(errorMessages, tofuError{"init", relPath, out})
 			continue
 		}
 
 		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
 		out, err = runValidate(dir, extraArgs)
+		
+		// Parse validate output too
+		parsed = output.ParseTofuOutput(out, err)
+		
+		// Add warnings to the global collection
+		for _, warning := range parsed.Warnings {
+			allWarnings = append(allWarnings, fmt.Sprintf("In %s (validate): %s", relPath, warning))
+		}
+		
 		printIndentedOutput(out, true)
-		if err != nil {
+		
+		// Only treat as error if there are actual errors, not just warnings
+		if parsed.HasError {
 			errorMessages = append(errorMessages, tofuError{"validate", relPath, out})
 			continue
 		}
+	}
+
+	// Print warning summary if there are any warnings
+	if len(allWarnings) > 0 {
+		fmt.Println()
+		output.PrintWarnings(allWarnings)
 	}
 
 	if len(errorMessages) > 0 {

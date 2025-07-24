@@ -134,8 +134,9 @@ func TestRunTofuValidateCLI_AllBranches(t *testing.T) {
 		{"not installed", mockArgs{checkInstalled: false}, true, 1},
 		{"getwd error", mockArgs{checkInstalled: true, getwdErr: fmt.Errorf("fail")}, true, 1},
 		{"no tf dirs", mockArgs{checkInstalled: true, dirs: []string{}}, false, 0},
-		{"init error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runCmdErr: fmt.Errorf("fail"), runCmdOut: "init fail"}, true, 1},
-		{"validate error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runValidateErr: fmt.Errorf("fail"), runValidateOut: "validate fail"}, true, 1},
+		{"init error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runCmdErr: fmt.Errorf("fail"), runCmdOut: "Error: init fail"}, true, 1},
+		{"validate error", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runValidateErr: fmt.Errorf("fail"), runValidateOut: "Error: validate fail"}, true, 1},
+		{"warning only - should not fail", mockArgs{checkInstalled: true, dirs: []string{"/mock"}, runCmdErr: fmt.Errorf("warning"), runCmdOut: "Warning: Dependency lock file entries automatically updated\n\nOpenTofu automatically rewrote some entries."}, false, 0},
 		{"all ok", mockArgs{checkInstalled: true, dirs: []string{"/mock"}}, false, 0},
 	}
 	for _, tc := range cases {
