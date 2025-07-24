@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/outputs"
-	tofu_fmt "pre-commit-hooks/internal/tofu_fmt"
+	tofu_fmt "pre-commit-hooks/internal/tofufmt"
 )
 
 func main() {

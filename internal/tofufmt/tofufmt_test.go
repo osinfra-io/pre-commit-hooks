@@ -3,9 +3,10 @@ package tofu_fmt
 import (
 	"os"
 	"path/filepath"
-	"pre-commit-hooks/internal/testutil"
 	"strings"
 	"testing"
+
+	"pre-commit-hooks/internal/testutil"
 )
 
 func TestCheckOpenTofuInstalled(t *testing.T) {

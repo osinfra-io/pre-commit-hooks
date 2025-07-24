@@ -4,8 +4,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"pre-commit-hooks/internal/testutil"
 	"testing"
+
+	"pre-commit-hooks/internal/testutil"
 )
 
 func TestCheckOpenTofuInstalled(t *testing.T) {

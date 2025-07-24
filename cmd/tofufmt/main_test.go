@@ -10,7 +10,7 @@ import (
 
 	"pre-commit-hooks/internal/outputs"
 	"pre-commit-hooks/internal/testutil"
-	tofu_fmt "pre-commit-hooks/internal/tofu_fmt"
+	tofu_fmt "pre-commit-hooks/internal/tofufmt"
 )
 
 func TestRunTofuFmtCLI_AllBranches(t *testing.T) {

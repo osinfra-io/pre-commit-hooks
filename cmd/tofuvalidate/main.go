@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"pre-commit-hooks/internal/outputs"
-	tofu_validate "pre-commit-hooks/internal/tofu_validate"
+	tofu_validate "pre-commit-hooks/internal/tofuvalidate"
 )
 
 func main() {
