@@ -52,11 +52,11 @@ func Test_findDirsWithTfFiles_and_walkDirs(t *testing.T) {
 
 func Test_printStatus(t *testing.T) {
 	old := os.Stdout
+	defer func() { os.Stdout = old }()
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 	printStatus("👍", "Test message")
 	w.Close()
-	os.Stdout = old
 	buf := make([]byte, 1024)
 	n, _ := r.Read(buf)
 	output := string(buf[:n])
