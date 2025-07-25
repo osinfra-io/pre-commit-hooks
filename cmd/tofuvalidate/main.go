@@ -67,36 +67,43 @@ func RunTofuValidateCLI(
 
 	var errorMessages []output.TofuMessage
 	var warningMessages []output.TofuMessage
+	baseDir := filepath.Base(rootDir)
 	for _, dir := range dirsWithTf {
 		relPath, err := filepath.Rel(rootDir, dir)
 		if err != nil {
 			relPath = dir // fallback to absolute path
 		}
-		printStatus(output.Running, fmt.Sprintf("Running tofu init in: %s...", relPath))
+		fullPath := relPath
+		if relPath == "." {
+			fullPath = baseDir
+		} else {
+			fullPath = baseDir + "/" + relPath
+		}
+		printStatus(output.Running, fmt.Sprintf("Running tofu init in: %s...", fullPath))
 		initCmd := []string{"init", "-input=false", "--backend=false"}
 		cmdArgs := append(initCmd, extraArgs...)
 		out, err := runCmd(dir, cmdArgs)
 		printIndentedOutput(out, true)
 		// Always check for warnings in init output
 		if strings.Contains(strings.ToLower(out), "warning") {
-			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: relPath, Output: out})
+			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
-			errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: relPath, Output: out})
+			errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 			continue
 		}
 
-		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", relPath))
+		printStatus(output.Running, fmt.Sprintf("Running tofu validate in: %s...", fullPath))
 		out, err = runValidate(dir, extraArgs)
 		printIndentedOutput(out, true)
 		// Always check for warnings in validate output
 		if strings.Contains(strings.ToLower(out), "warning") {
-			warningMessages = append(warningMessages, output.TofuMessage{Step: "validate", RelPath: relPath, Output: out})
+			warningMessages = append(warningMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
 			// Only treat as error if not a warning (warnings already handled above)
 			if !strings.Contains(strings.ToLower(out), "warning") {
-				errorMessages = append(errorMessages, output.TofuMessage{Step: "validate", RelPath: relPath, Output: out})
+				errorMessages = append(errorMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 			}
 			continue
 		}
@@ -144,7 +151,7 @@ func walkDirs(dir string, dirs *[]string) error {
 	if err != nil {
 		return err
 	}
-	hasTf := false
+	hasTfOrTofu := false
 	for _, entry := range entries {
 		name := entry.Name()
 		// Skip hidden/system folders
@@ -156,11 +163,11 @@ func walkDirs(dir string, dirs *[]string) error {
 			if err := walkDirs(path, dirs); err != nil {
 				return err
 			}
-		} else if strings.HasSuffix(name, ".tf") {
-			hasTf = true
+		} else if strings.HasSuffix(name, ".tf") || strings.HasSuffix(name, ".tofu") {
+			hasTfOrTofu = true
 		}
 	}
-	if hasTf {
+	if hasTfOrTofu {
 		*dirs = append(*dirs, dir)
 	}
 	return nil

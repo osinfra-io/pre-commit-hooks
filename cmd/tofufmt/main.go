@@ -37,10 +37,8 @@ func RunTofuFmtCLI(
 		fmt.Println("Error getting current directory:", err)
 		return err
 	}
-	dirName := wd[strings.LastIndex(wd, string(os.PathSeparator))+1:]
-	fmt.Printf("Running tofu fmt recursively in directory: %s\n", dirName)
-
-	printStatus(output.Running, "Running tofu fmt...")
+	baseDir := wd[strings.LastIndex(wd, string(os.PathSeparator))+1:]
+	printStatus(output.Running, fmt.Sprintf("Running tofu fmt recursively in: %s", baseDir))
 
 	outputStr, err := runTofuFmt(wd, extraArgs)
 	fmt.Println()
