@@ -24,7 +24,7 @@ const (
 	// Warning: Indicates a warning or something that needs attention
 	Warning = "🚧"
 	// Running: Indicates an ongoing process or operation
-	Running = "⚙️"
+	Running = "🔧"
 	// ThumbsUp: Indicates success or positive outcome
 	ThumbsUp = "👍"
 )
