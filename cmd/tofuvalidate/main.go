@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -159,6 +160,7 @@ func walkDirs(dir string, dirs *[]string) error {
 	if err != nil {
 		return err
 	}
+	var errs []error
 	hasTfOrTofu := false
 	for _, entry := range entries {
 		name := entry.Name()
@@ -169,7 +171,7 @@ func walkDirs(dir string, dirs *[]string) error {
 			}
 			path := filepath.Join(dir, name)
 			if err := walkDirs(path, dirs); err != nil {
-				return err
+				errs = append(errs, err)
 			}
 		} else if strings.HasSuffix(name, ".tf") || strings.HasSuffix(name, ".tofu") {
 			hasTfOrTofu = true
@@ -178,7 +180,7 @@ func walkDirs(dir string, dirs *[]string) error {
 	if hasTfOrTofu {
 		*dirs = append(*dirs, dir)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // printIndentedOutput prints each line of output indented for better readability
