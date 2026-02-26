@@ -145,7 +145,9 @@ func runCmdInDir(dir string, args []string) (string, error) {
 // findDirsWithTfFiles recursively finds directories containing .tf files
 func findDirsWithTfFiles(root string) []string {
 	var dirs []string
-	_ = walkDirs(root, &dirs)
+	if err := walkDirs(root, &dirs); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Error scanning directories: %v\n", err)
+	}
 	return dirs
 }
 
