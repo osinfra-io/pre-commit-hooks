@@ -89,14 +89,11 @@ func RunTofuValidateCLI(
 		out, err := runCmd(dir, cmdArgs)
 		printIndentedOutput(out, true)
 		// Always check for warnings in init output
-		if strings.Contains(strings.ToLower(out), "warning") {
+		if hasWarning(out) {
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
-			// Only treat as error if not a warning (warnings already handled above)
-			if !strings.Contains(strings.ToLower(out), "warning") {
-				errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
-			}
+			errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 			continue
 		}
 
@@ -104,14 +101,11 @@ func RunTofuValidateCLI(
 		out, err = runValidate(dir, extraArgs)
 		printIndentedOutput(out, true)
 		// Always check for warnings in validate output
-		if strings.Contains(strings.ToLower(out), "warning") {
+		if hasWarning(out) {
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
-			// Only treat as error if not a warning (warnings already handled above)
-			if !strings.Contains(strings.ToLower(out), "warning") {
-				errorMessages = append(errorMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
-			}
+			errorMessages = append(errorMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 			continue
 		}
 	}
@@ -206,4 +200,21 @@ func printIndentedOutput(output string, addNewline bool) {
 // printStatus prints a colored emoji status message
 func printStatus(emoji, msg string) {
 	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
+}
+
+// hasWarning checks if output contains a warning message
+// Uses pattern matching to avoid false positives from filenames or unrelated text
+func hasWarning(output string) bool {
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		lower := strings.ToLower(trimmed)
+		// Check for common warning patterns at start of line
+		if strings.HasPrefix(lower, "warning:") || 
+		   strings.HasPrefix(lower, "│ warning:") ||
+		   strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning") {
+			return true
+		}
+	}
+	return false
 }
