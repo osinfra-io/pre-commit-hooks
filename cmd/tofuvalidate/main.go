@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -76,6 +77,9 @@ func RunTofuValidateCLI(
 		fullPath := relPath
 		if relPath == "." {
 			fullPath = baseDir
+		} else if strings.HasPrefix(relPath, "..") {
+			// If path is outside rootDir, use just the dir name
+			fullPath = filepath.Base(dir)
 		} else {
 			fullPath = baseDir + "/" + relPath
 		}
@@ -145,7 +149,9 @@ func runCmdInDir(dir string, args []string) (string, error) {
 // findDirsWithTfFiles recursively finds directories containing .tf files
 func findDirsWithTfFiles(root string) []string {
 	var dirs []string
-	_ = walkDirs(root, &dirs)
+	if err := walkDirs(root, &dirs); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Error scanning directories: %v\n", err)
+	}
 	return dirs
 }
 
@@ -154,6 +160,7 @@ func walkDirs(dir string, dirs *[]string) error {
 	if err != nil {
 		return err
 	}
+	var errs []error
 	hasTfOrTofu := false
 	for _, entry := range entries {
 		name := entry.Name()
@@ -164,7 +171,7 @@ func walkDirs(dir string, dirs *[]string) error {
 			}
 			path := filepath.Join(dir, name)
 			if err := walkDirs(path, dirs); err != nil {
-				return err
+				errs = append(errs, err)
 			}
 		} else if strings.HasSuffix(name, ".tf") || strings.HasSuffix(name, ".tofu") {
 			hasTfOrTofu = true
@@ -173,7 +180,7 @@ func walkDirs(dir string, dirs *[]string) error {
 	if hasTfOrTofu {
 		*dirs = append(*dirs, dir)
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 // printIndentedOutput prints each line of output indented for better readability

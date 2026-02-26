@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"pre-commit-hooks/internal/output"
 	tofufmt "pre-commit-hooks/internal/tofufmt"
@@ -37,7 +37,7 @@ func RunTofuFmtCLI(
 		fmt.Println("Error getting current directory:", err)
 		return err
 	}
-	baseDir := wd[strings.LastIndex(wd, string(os.PathSeparator))+1:]
+	baseDir := filepath.Base(wd)
 	printStatus(output.Running, fmt.Sprintf("Running tofu fmt recursively in: %s", baseDir))
 
 	outputStr, err := runTofuFmt(wd, extraArgs)
