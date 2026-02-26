@@ -17,6 +17,12 @@ Runs `tofu fmt` to rewrite your OpenTofu (`.tf`, `.tofu`, `.tfvars`) files to a 
 
 Runs `tofu validate` to check your configuration for syntax errors and internal consistency, without accessing remote services or APIs. This helps catch mistakes before applying changes. It will not validate files in `.terraform/` directories.
 
+### tofu-test
+
+#### Runs OpenTofu automated tests
+
+Runs `tofu test` to execute automated tests defined in `.tftest.hcl` files. This helps validate your infrastructure code with comprehensive test coverage, ensuring your configurations behave as expected. Tests are executed in the root directory only. The hook will skip execution if no test files are found.
+
 ---
 
 ## Usage
@@ -47,6 +53,19 @@ Validates your OpenTofu configuration files for syntax and internal consistency.
   - id: tofu-validate
    # Optional: pass additional args to tofu validate
    # args: ["-no-color"]
+```
+
+### Example: `tofu-test`
+
+Runs OpenTofu automated tests defined in `.tftest.hcl` files.
+
+```yaml
+- repo: https://github.com/osinfra-io/pre-commit-hooks
+ rev: <release-or-commit-sha>
+ hooks:
+  - id: tofu-test
+   # Optional: pass additional args to tofu test
+   # args: ["-verbose"]
 ```
 
 Replace `<release-or-commit-sha>` with the desired version or commit hash.

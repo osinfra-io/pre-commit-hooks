@@ -16,3 +16,13 @@
   always_run: true
   language: golang
   name: tofu validate
+
+- id: tofu-test
+  description: The tofu test command runs automated tests against OpenTofu configuration, executing tests defined in .tftest.hcl files.
+  entry: tofutest
+  exclude: \.terraform/.*$ # OpenTofu uses the .terraform directory currently
+  files: ^$
+  pass_filenames: false
+  always_run: true
+  language: golang
+  name: tofu test
