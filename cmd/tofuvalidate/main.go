@@ -93,10 +93,7 @@ func RunTofuValidateCLI(
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
-			// Only treat as error if not a warning (warnings already handled above)
-			if !hasWarning(out) {
-				errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
-			}
+			errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 			continue
 		}
 
@@ -108,10 +105,7 @@ func RunTofuValidateCLI(
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
-			// Only treat as error if not a warning (warnings already handled above)
-			if !hasWarning(out) {
-				errorMessages = append(errorMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
-			}
+			errorMessages = append(errorMessages, output.TofuMessage{Step: "validate", RelPath: fullPath, Output: out})
 			continue
 		}
 	}
