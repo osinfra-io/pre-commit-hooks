@@ -76,6 +76,9 @@ func RunTofuValidateCLI(
 		fullPath := relPath
 		if relPath == "." {
 			fullPath = baseDir
+		} else if strings.HasPrefix(relPath, "..") {
+			// If path is outside rootDir, use just the dir name
+			fullPath = filepath.Base(dir)
 		} else {
 			fullPath = baseDir + "/" + relPath
 		}
