@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"pre-commit-hooks/internal/output"
 	tofufmt "pre-commit-hooks/internal/tofufmt"
