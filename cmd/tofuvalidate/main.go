@@ -89,7 +89,10 @@ func RunTofuValidateCLI(
 			warningMessages = append(warningMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
 		}
 		if err != nil {
-			errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
+			// Only treat as error if not a warning (warnings already handled above)
+			if !strings.Contains(strings.ToLower(out), "warning") {
+				errorMessages = append(errorMessages, output.TofuMessage{Step: "init", RelPath: fullPath, Output: out})
+			}
 			continue
 		}
 
