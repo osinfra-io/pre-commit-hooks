@@ -34,7 +34,7 @@ To use these hooks, add them to your `.pre-commit-config.yaml` file. Below are e
 Formats your OpenTofu configuration files to a canonical format and style.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pre-commit-hooks
+- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
  rev: <release-or-commit-sha>
  hooks:
   - id: tofu-fmt
@@ -47,7 +47,7 @@ Formats your OpenTofu configuration files to a canonical format and style.
 Validates your OpenTofu configuration files for syntax and internal consistency.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pre-commit-hooks
+- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
  rev: <release-or-commit-sha>
  hooks:
   - id: tofu-validate
@@ -60,7 +60,7 @@ Validates your OpenTofu configuration files for syntax and internal consistency.
 Runs OpenTofu automated tests defined in `.tftest.hcl` files.
 
 ```yaml
-- repo: https://github.com/osinfra-io/pre-commit-hooks
+- repo: https://github.com/osinfra-io/pt-techne-pre-commit-hooks
  rev: <release-or-commit-sha>
  hooks:
   - id: tofu-test
