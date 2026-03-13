@@ -1,14 +1,6 @@
 
 # Hooks for Infrastructure as Code (IaC) tools
 
-```mermaid
-graph LR
-    A[Pull request] --> B[Go: Test]
-
-    style A fill:#fff4e6,color:#000
-    style B fill:#d4edda,color:#000
-```
-
 This repository contains a collection of hooks for Infrastructure as Code (IaC) tools. The hooks are designed to be used with [pre-commit](https://pre-commit.com/), a framework for managing and maintaining multi-language pre-commit hooks.
 
 ## Available Hooks
