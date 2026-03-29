@@ -210,7 +210,7 @@ func hasWarning(output string) bool {
 		trimmed := strings.TrimSpace(line)
 		lower := strings.ToLower(trimmed)
 		// Check for common warning patterns at start of line
-		if strings.HasPrefix(lower, "warning:") || 
+		if strings.HasPrefix(lower, "warning:") ||
 		   strings.HasPrefix(lower, "│ warning:") ||
 		   strings.HasPrefix(lower, "╷") && strings.Contains(lower, "warning") {
 			return true
