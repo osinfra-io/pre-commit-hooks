@@ -103,18 +103,32 @@ func printStatus(emoji, msg string) {
 	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
 }
 
-// parseExtraArgs filters os.Args tokens, keeping only flags (tokens starting with '-')
-// and their values. Equals-form flags (-flag=value) are kept as a single token.
-// Split-form flags (-flag value) are kept as two tokens.
+// parseExtraArgs filters os.Args tokens, keeping only flags (tokens starting
+// with '-') and their values. Equals-form flags (-flag=value) are kept as a
+// single token. Split-form flags (-flag value) are kept as two tokens, but
+// only for flags known to accept a value argument — boolean flags will not
+// accidentally consume the next token. A "--" token ends flag processing.
 func parseExtraArgs(args []string) []string {
+	// knownValueFlags lists tofu test flags that accept a value in split form.
+	knownValueFlags := map[string]bool{
+		"-filter":         true,
+		"-test-directory": true,
+		"-var":            true,
+		"-var-file":       true,
+	}
+
 	extraArgs := []string{}
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
+		if arg == "--" {
+			break
+		}
 		if strings.HasPrefix(arg, "-") {
 			extraArgs = append(extraArgs, arg)
-			// If this flag doesn't contain '=' and the next token exists and doesn't
-			// start with '-', it's a split-form flag — include the value too.
-			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+			// Only consume the next token as a value for flags known to accept
+			// one, and only when no value is already embedded via '='.
+			if !strings.Contains(arg, "=") && knownValueFlags[arg] &&
+				i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
 				extraArgs = append(extraArgs, args[i+1])
 				i++ // skip the value token
 			}

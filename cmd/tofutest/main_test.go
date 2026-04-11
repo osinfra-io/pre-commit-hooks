@@ -240,3 +240,19 @@ func TestParseExtraArgs_TrailingFlagNoValue(t *testing.T) {
 		}
 	}
 }
+
+func TestParseExtraArgs_BoolFlagDoesNotCapturePositional(t *testing.T) {
+	// Boolean flags must not consume a following positional token.
+	got := parseExtraArgs([]string{"-verbose", "file.tf"})
+	if len(got) != 1 || got[0] != "-verbose" {
+		t.Errorf("parseExtraArgs([-verbose file.tf]) = %v, want [-verbose]", got)
+	}
+}
+
+func TestParseExtraArgs_EndOfFlags(t *testing.T) {
+	// A "--" token must end flag processing; everything after is ignored.
+	got := parseExtraArgs([]string{"-verbose", "--", "-filter", "TestFoo"})
+	if len(got) != 1 || got[0] != "-verbose" {
+		t.Errorf("parseExtraArgs([-verbose -- -filter TestFoo]) = %v, want [-verbose]", got)
+	}
+}
