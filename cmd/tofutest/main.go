@@ -10,23 +10,8 @@ import (
 )
 
 func main() {
-	// Only pass flags (arguments starting with '-') to tofu commands
-	extraArgs := []string{}
-	args := os.Args[1:]
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		if strings.HasPrefix(arg, "-") {
-			extraArgs = append(extraArgs, arg)
-			// If this flag doesn't contain '=' and next token exists and doesn't start with '-',
-			// it's a split-form flag, so include the value
-			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				extraArgs = append(extraArgs, args[i+1])
-				i++ // Skip the next token since we just consumed it
-			}
-		}
-	}
 	err := RunTofuTestCLI(
-		extraArgs,
+		parseExtraArgs(os.Args[1:]),
 		tofutest.CheckOpenTofuInstalled,
 		os.Getwd,
 		tofutest.HasTestFiles,
@@ -116,4 +101,24 @@ func printIndentedOutput(output string, addNewline bool) {
 // printStatus prints a colored emoji status message
 func printStatus(emoji, msg string) {
 	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
+}
+
+// parseExtraArgs filters os.Args tokens, keeping only flags (tokens starting with '-')
+// and their values. Equals-form flags (-flag=value) are kept as a single token.
+// Split-form flags (-flag value) are kept as two tokens.
+func parseExtraArgs(args []string) []string {
+	extraArgs := []string{}
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if strings.HasPrefix(arg, "-") {
+			extraArgs = append(extraArgs, arg)
+			// If this flag doesn't contain '=' and the next token exists and doesn't
+			// start with '-', it's a split-form flag — include the value too.
+			if !strings.Contains(arg, "=") && i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				extraArgs = append(extraArgs, args[i+1])
+				i++ // skip the value token
+			}
+		}
+	}
+	return extraArgs
 }

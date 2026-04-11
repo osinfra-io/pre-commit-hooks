@@ -186,3 +186,57 @@ func TestRunTofuTestCLI_ExtraArgs(t *testing.T) {
 		t.Errorf("Expected second arg to be -filter=TestFoo, got %s", receivedArgs[1])
 	}
 }
+
+func TestParseExtraArgs_StandardFlag(t *testing.T) {
+	got := parseExtraArgs([]string{"-verbose"})
+	if len(got) != 1 || got[0] != "-verbose" {
+		t.Errorf("parseExtraArgs([-verbose]) = %v, want [-verbose]", got)
+	}
+}
+
+func TestParseExtraArgs_EqualForm(t *testing.T) {
+	got := parseExtraArgs([]string{"-filter=TestFoo"})
+	if len(got) != 1 || got[0] != "-filter=TestFoo" {
+		t.Errorf("parseExtraArgs([-filter=TestFoo]) = %v, want [-filter=TestFoo]", got)
+	}
+}
+
+func TestParseExtraArgs_SplitForm(t *testing.T) {
+	got := parseExtraArgs([]string{"-filter", "TestFoo"})
+	if len(got) != 2 || got[0] != "-filter" || got[1] != "TestFoo" {
+		t.Errorf("parseExtraArgs([-filter TestFoo]) = %v, want [-filter TestFoo]", got)
+	}
+}
+
+func TestParseExtraArgs_Mixed(t *testing.T) {
+	got := parseExtraArgs([]string{"-verbose", "-filter", "TestFoo", "-json"})
+	want := []string{"-verbose", "-filter", "TestFoo", "-json"}
+	if len(got) != len(want) {
+		t.Fatalf("parseExtraArgs() = %v, want %v", got, want)
+	}
+	for i, v := range want {
+		if got[i] != v {
+			t.Errorf("parseExtraArgs()[%d] = %q, want %q", i, got[i], v)
+		}
+	}
+}
+
+func TestParseExtraArgs_NonFlagTokensOnly(t *testing.T) {
+	got := parseExtraArgs([]string{"file1.tf", "file2.tofu"})
+	if len(got) != 0 {
+		t.Errorf("parseExtraArgs() = %v, want empty slice", got)
+	}
+}
+
+func TestParseExtraArgs_TrailingFlagNoValue(t *testing.T) {
+	got := parseExtraArgs([]string{"-verbose", "-filter"})
+	want := []string{"-verbose", "-filter"}
+	if len(got) != len(want) {
+		t.Fatalf("parseExtraArgs() = %v, want %v", got, want)
+	}
+	for i, v := range want {
+		if got[i] != v {
+			t.Errorf("parseExtraArgs()[%d] = %q, want %q", i, got[i], v)
+		}
+	}
+}

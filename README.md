@@ -66,7 +66,11 @@ Runs OpenTofu automated tests defined in `.tftest.hcl` files.
   - id: tofu-test
    # Optional: pass additional args to tofu test
    # args: ["-verbose"]
+   # args: ["-filter=TestFoo"]   # equals-form flag
+   # args: ["-filter", "TestFoo"] # split-form flag (both tokens required)
 ```
+
+Both equals-form (`-filter=TestFoo`) and split-form (`-filter TestFoo`) flags are supported. When using split-form flags, include both the flag and its value as separate list entries.
 
 Replace `<release-or-commit-sha>` with the desired version or commit hash.
 
