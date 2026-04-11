@@ -70,7 +70,7 @@ func RunTofuTestCLI(
 		printStatus(output.Error, "OpenTofu test failed.")
 		fmt.Println()
 		exit(1)
-		return fmt.Errorf("test failed")
+		return fmt.Errorf("test failed: %w", err)
 	}
 
 	printStatus(output.ThumbsUp, "OpenTofu test completed successfully.")

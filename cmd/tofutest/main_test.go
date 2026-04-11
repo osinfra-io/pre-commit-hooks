@@ -133,21 +133,25 @@ func TestRunTofuTestCLI_TestSuccess(t *testing.T) {
 func TestRunTofuTestCLI_TestFailure(t *testing.T) {
 	called := false
 	exitCode := 0
-	
+	rootCause := errors.New("test error")
+
 	checkInstalled := func() bool { return true }
 	getwd := func() (string, error) { return "/fake", nil }
 	hasTestFiles := func(string) (bool, error) { return true, nil }
-	runTest := func(string, []string) (string, error) { return "Test failed", errors.New("test error") }
+	runTest := func(string, []string) (string, error) { return "Test failed", rootCause }
 	printStatus := func(string, string) {}
-	exit := func(code int) { 
+	exit := func(code int) {
 		exitCode = code
 		called = true
 	}
 
 	err := RunTofuTestCLI(nil, checkInstalled, getwd, hasTestFiles, runTest, printStatus, exit)
-	
+
 	if err == nil {
 		t.Error("Expected error when tests fail, got nil")
+	}
+	if !errors.Is(err, rootCause) {
+		t.Errorf("Expected returned error to wrap root cause, got: %v", err)
 	}
 	if !called {
 		t.Error("Expected exit to be called")
