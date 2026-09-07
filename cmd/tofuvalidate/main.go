@@ -10,7 +10,6 @@ import (
 
 	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/testutil"
-	"pre-commit-hooks/internal/tofuvalidate"
 )
 
 func main() {
@@ -27,7 +26,7 @@ func main() {
 		os.Getwd,
 		findDirsWithTfFiles,
 		runCmdInDir,
-		tofuvalidate.RunTofuValidate,
+		runTofuValidate,
 	)
 	if err != nil {
 		os.Exit(1)
@@ -106,6 +105,14 @@ func RunTofuValidateCLI(
 	}
 
 	return nil
+}
+
+func runTofuValidate(dir string, extraArgs []string) (string, error) {
+	args := append([]string{"validate"}, extraArgs...)
+	cmd := exec.Command("tofu", args...)
+	cmd.Dir = dir
+	out, err := cmd.CombinedOutput()
+	return string(out), err
 }
 
 // runCmdInDir runs a command in the specified directory, returns all output and error

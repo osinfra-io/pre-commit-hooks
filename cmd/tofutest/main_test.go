@@ -2,7 +2,11 @@ package main
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"pre-commit-hooks/internal/testutil"
 )
 
 func TestRunTofuTestCLI_TofuNotInstalled(t *testing.T) {
@@ -123,72 +127,84 @@ func TestRunTofuTestCLI_ExtraArgs(t *testing.T) {
 	}
 }
 
-func TestParseExtraArgs_StandardFlag(t *testing.T) {
-	got := parseExtraArgs([]string{"-verbose"})
-	if len(got) != 1 || got[0] != "-verbose" {
-		t.Errorf("parseExtraArgs([-verbose]) = %v, want [-verbose]", got)
+func TestHasTestFiles_WithTestFiles(t *testing.T) {
+	tempDir, cleanup := testutil.CreateTempDir(t, "tofutest-has-test")
+	defer cleanup()
+
+	testFile := filepath.Join(tempDir, "example.tftest.hcl")
+	if err := os.WriteFile(testFile, []byte("# test file"), 0o644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	got, err := hasTestFiles(tempDir)
+	if err != nil {
+		t.Fatalf("hasTestFiles() returned error: %v", err)
+	}
+	if !got {
+		t.Error("hasTestFiles() = false, want true when test file exists")
 	}
 }
 
-func TestParseExtraArgs_EqualForm(t *testing.T) {
-	got := parseExtraArgs([]string{"-filter=TestFoo"})
-	if len(got) != 1 || got[0] != "-filter=TestFoo" {
-		t.Errorf("parseExtraArgs([-filter=TestFoo]) = %v, want [-filter=TestFoo]", got)
+func TestHasTestFiles_WithoutTestFiles(t *testing.T) {
+	tempDir, cleanup := testutil.CreateTempDir(t, "tofutest-no-test")
+	defer cleanup()
+
+	tfFile := filepath.Join(tempDir, "main.tf")
+	if err := os.WriteFile(tfFile, []byte("# tf file"), 0o644); err != nil {
+		t.Fatalf("Failed to create tf file: %v", err)
+	}
+
+	got, err := hasTestFiles(tempDir)
+	if err != nil {
+		t.Fatalf("hasTestFiles() returned error: %v", err)
+	}
+	if got {
+		t.Error("hasTestFiles() = true, want false when no test files exist")
 	}
 }
 
-func TestParseExtraArgs_SplitForm(t *testing.T) {
-	got := parseExtraArgs([]string{"-filter", "TestFoo"})
-	if len(got) != 2 || got[0] != "-filter" || got[1] != "TestFoo" {
-		t.Errorf("parseExtraArgs([-filter TestFoo]) = %v, want [-filter TestFoo]", got)
+func TestHasTestFiles_InSubdirectory(t *testing.T) {
+	tempDir, cleanup := testutil.CreateTempDir(t, "tofutest-subdir")
+	defer cleanup()
+
+	subDir := filepath.Join(tempDir, "tests")
+	if err := os.Mkdir(subDir, 0o755); err != nil {
+		t.Fatalf("Failed to create subdirectory: %v", err)
+	}
+
+	testFile := filepath.Join(subDir, "integration.tftest.hcl")
+	if err := os.WriteFile(testFile, []byte("# test file in subdir"), 0o644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	got, err := hasTestFiles(tempDir)
+	if err != nil {
+		t.Fatalf("hasTestFiles() returned error: %v", err)
+	}
+	if !got {
+		t.Error("hasTestFiles() = false, want true when test file exists in subdirectory")
 	}
 }
 
-func TestParseExtraArgs_Mixed(t *testing.T) {
-	got := parseExtraArgs([]string{"-verbose", "-filter", "TestFoo", "-json"})
-	want := []string{"-verbose", "-filter", "TestFoo", "-json"}
-	if len(got) != len(want) {
-		t.Fatalf("parseExtraArgs() = %v, want %v", got, want)
-	}
-	for i, v := range want {
-		if got[i] != v {
-			t.Errorf("parseExtraArgs()[%d] = %q, want %q", i, got[i], v)
-		}
-	}
-}
+func TestHasTestFiles_SkipsHiddenDirectories(t *testing.T) {
+	tempDir, cleanup := testutil.CreateTempDir(t, "tofutest-hidden")
+	defer cleanup()
 
-func TestParseExtraArgs_NonFlagTokensOnly(t *testing.T) {
-	got := parseExtraArgs([]string{"file1.tf", "file2.tofu"})
-	if len(got) != 0 {
-		t.Errorf("parseExtraArgs() = %v, want empty slice", got)
+	hiddenDir := filepath.Join(tempDir, ".hidden")
+	if err := os.Mkdir(hiddenDir, 0o755); err != nil {
+		t.Fatalf("Failed to create hidden directory: %v", err)
 	}
-}
 
-func TestParseExtraArgs_TrailingFlagNoValue(t *testing.T) {
-	got := parseExtraArgs([]string{"-verbose", "-filter"})
-	want := []string{"-verbose", "-filter"}
-	if len(got) != len(want) {
-		t.Fatalf("parseExtraArgs() = %v, want %v", got, want)
+	testFile := filepath.Join(hiddenDir, "test.tftest.hcl")
+	if err := os.WriteFile(testFile, []byte("# test file in hidden dir"), 0o644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
 	}
-	for i, v := range want {
-		if got[i] != v {
-			t.Errorf("parseExtraArgs()[%d] = %q, want %q", i, got[i], v)
-		}
-	}
-}
 
-func TestParseExtraArgs_BoolFlagDoesNotCapturePositional(t *testing.T) {
-	// Boolean flags must not consume a following positional token.
-	got := parseExtraArgs([]string{"-verbose", "file.tf"})
-	if len(got) != 1 || got[0] != "-verbose" {
-		t.Errorf("parseExtraArgs([-verbose file.tf]) = %v, want [-verbose]", got)
+	got, err := hasTestFiles(tempDir)
+	if err != nil {
+		t.Fatalf("hasTestFiles() returned error: %v", err)
 	}
-}
-
-func TestParseExtraArgs_EndOfFlags(t *testing.T) {
-	// A "--" token must end flag processing; everything after is ignored.
-	got := parseExtraArgs([]string{"-verbose", "--", "-filter", "TestFoo"})
-	if len(got) != 1 || got[0] != "-verbose" {
-		t.Errorf("parseExtraArgs([-verbose -- -filter TestFoo]) = %v, want [-verbose]", got)
+	if got {
+		t.Error("hasTestFiles() = true, want false when test files only in hidden directories")
 	}
 }

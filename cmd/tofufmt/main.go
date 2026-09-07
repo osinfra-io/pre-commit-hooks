@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/testutil"
-	"pre-commit-hooks/internal/tofufmt"
 )
 
 // truncateLine truncates s to maxWidth runes, appending "…" if truncated.
@@ -26,12 +26,27 @@ func main() {
 		os.Args[1:],
 		testutil.CheckOpenTofuInstalled,
 		os.Getwd,
-		tofufmt.RunTofuFmt,
-		tofufmt.FormatFiles,
+		runTofuFmt,
+		formatFiles,
 	)
 	if err != nil {
 		os.Exit(1)
 	}
+}
+
+func runTofuFmt(dir string, extraArgs []string) (string, error) {
+	args := append([]string{"fmt", "-check", "-recursive", "--diff"}, extraArgs...)
+	cmd := exec.Command("tofu", args...)
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	return string(output), err
+}
+
+func formatFiles(dir string, extraArgs []string) error {
+	args := append([]string{"fmt", "-recursive"}, extraArgs...)
+	cmd := exec.Command("tofu", args...)
+	cmd.Dir = dir
+	return cmd.Run()
 }
 
 // RunTofuFmtCLI runs the tofu fmt CLI logic. Returns error if any step fails.

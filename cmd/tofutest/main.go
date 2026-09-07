@@ -3,20 +3,21 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"pre-commit-hooks/internal/output"
 	"pre-commit-hooks/internal/testutil"
-	"pre-commit-hooks/internal/tofutest"
 )
 
 func main() {
 	err := RunTofuTestCLI(
-		parseExtraArgs(os.Args[1:]),
+		os.Args[1:],
 		testutil.CheckOpenTofuInstalled,
 		os.Getwd,
-		tofutest.HasTestFiles,
-		tofutest.RunTofuTest,
+		hasTestFiles,
+		runTofuTest,
 		printStatus,
 	)
 	if err != nil {
@@ -92,36 +93,37 @@ func printStatus(emoji, msg string) {
 	fmt.Println(output.EmojiColorText(emoji, msg, output.Green))
 }
 
-// parseExtraArgs filters os.Args tokens, keeping only flags (tokens starting
-// with '-') and their values. Equals-form flags (-flag=value) are kept as a
-// single token. Split-form flags (-flag value) are kept as two tokens, but
-// only for flags known to accept a value argument — boolean flags will not
-// accidentally consume the next token. A "--" token ends flag processing.
-func parseExtraArgs(args []string) []string {
-	// knownValueFlags lists tofu test flags that accept a value in split form.
-	knownValueFlags := map[string]bool{
-		"-filter":         true,
-		"-test-directory": true,
-		"-var":            true,
-		"-var-file":       true,
-	}
+func hasTestFiles(rootDir string) (bool, error) {
+	found := false
+	cleanRoot := filepath.Clean(rootDir)
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-	extraArgs := []string{}
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
-		if arg == "--" {
-			break
-		}
-		if strings.HasPrefix(arg, "-") {
-			extraArgs = append(extraArgs, arg)
-			// Only consume the next token as a value for flags known to accept
-			// one, and only when no value is already embedded via '='.
-			if !strings.Contains(arg, "=") && knownValueFlags[arg] &&
-				i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-				extraArgs = append(extraArgs, args[i+1])
-				i++ // skip the value token
+		if info.IsDir() {
+			name := info.Name()
+			if filepath.Clean(path) != cleanRoot && strings.HasPrefix(name, ".") {
+				return filepath.SkipDir
 			}
+			return nil
 		}
-	}
-	return extraArgs
+
+		if strings.HasSuffix(info.Name(), ".tftest.hcl") {
+			found = true
+			return filepath.SkipAll
+		}
+
+		return nil
+	})
+
+	return found, err
+}
+
+func runTofuTest(dir string, extraArgs []string) (string, error) {
+	args := append([]string{"test"}, extraArgs...)
+	cmd := exec.Command("tofu", args...)
+	cmd.Dir = dir
+	output, err := cmd.CombinedOutput()
+	return string(output), err
 }
